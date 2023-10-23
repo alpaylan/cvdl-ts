@@ -1,0 +1,83 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+/* eslint-disable @typescript-eslint/no-namespace */
+
+export type Width = Percent | Absolute | Fill;
+
+export type Percent = {
+    tag: "Percent";
+    value: number;
+}
+
+export type Absolute = {
+    tag: "Absolute";
+    value: number;
+}
+
+export type Fill = {
+    tag: "Fill";
+}
+
+export module Width {
+    export function default_() : Width {
+        return fill();
+    }
+
+    export function percent(value: number) : Width {
+        return { tag: "Percent", value: value };
+    }
+
+    export function absolute(value: number) : Width {
+        return { tag: "Absolute", value: value };
+    }
+
+    export function fill() : Width {
+        return { tag: "Fill" };
+    }
+
+    export function is_fill(self: Width) : boolean {
+        return self.tag === "Fill";
+    }
+
+    export function get_fixed_unchecked(self: Width) : number {
+        switch (self.tag) {
+            case "Percent":
+            case "Absolute":
+                return self.value;
+            case "Fill":
+                throw "Width.get_fixed_unchecked() called on Width.Fill";
+        }
+    }
+
+    export function scale(self: Width, scale: number) : Width {
+        console.log("Scaling width: ", self, scale);
+        switch (self.tag) {
+            case "Percent":
+                console.log(absolute(self.value * scale / 100));
+                return absolute(self.value * scale / 100);
+            case "Absolute":
+                console.log(absolute(self.value * scale));
+                return self;
+            case "Fill":
+                return fill();
+        }
+    }
+
+    export function fromJson(json: any): Width {
+        if (json === undefined) {
+            return default_();
+        } else if (typeof json === 'string') {
+            if (json.endsWith('%')) {
+                return percent(parseFloat(json.slice(0, -1)));
+            } else if (json.endsWith('px')) {
+                return absolute(parseFloat(json.slice(0, -2)));
+            } else {
+                return default_();
+            }
+        } else {
+            return default_();
+        }
+    }
+}
+
+
+
