@@ -44,7 +44,6 @@ export class SectionLayout {
             case 'FlexRow':
             case 'FrozenRow': {
                 const container = SectionLayout.constrMap(key) as ContainerType;
-                console.log(json);
                 container.elements = json[key].elements.map((element: any) => SectionLayout.fromJson(element));
                 container.margin = json[key].margin;
                 container.alignment = json[key].alignment;
@@ -66,7 +65,7 @@ export class SectionLayout {
         }
         throw new Error("Invalid layout");
     }
-    
+
 
     width(): Width {
         return this.inner.width;
@@ -112,17 +111,14 @@ export class SectionLayout {
 
 
     is_instantiated(): boolean {
-        console.debug!("Checking if", this, "is instantiated...");
         if (this.is_container()) {
             return (this.inner as ContainerType).elements.map(e => e.is_instantiated()).reduce((a, b) => a && b, true);
         } else {
-            console.debug!("Checking if", this.inner.tag, "is instantiated...", (this.inner as Elem).is_ref);
             return !(this.inner as Elem).is_ref;
         }
     }
 
     instantiate(section: & Map<string, ItemContent>): SectionLayout {
-        console.debug("Instantiating", this.inner.tag, "with", section);
         if (this.is_container()) {
             return new SectionLayout((this.inner as ContainerType).instantiate(section));
         } else if ((this.inner as Elem).is_ref) {
@@ -136,18 +132,13 @@ export class SectionLayout {
         element: Elem,
         section: & Map<string, ItemContent>,
     ): SectionLayout {
-
-        console.debug("Instantiating", element.item, "with", section);
         const text = section.get(element.item);
-        console.debug("Instantiating", element.item, "with", text);
 
         if (text === undefined) {
             return new SectionLayout(new Stack([], Margin.default_(), Alignment.default_(), Width.default_()));
         } else {
-            console.debug("Text", element.item, "with", text, "turned into", ItemContent.toString(text));
             element.item = ItemContent.toString(text);
             element.is_ref = false;
-            console.debug("Instantiated", element);
             if (text.tag === "Url") {
                 return new SectionLayout(
                     element.with_url(text.value.url).with_item(text.value.text),
@@ -159,12 +150,9 @@ export class SectionLayout {
     }
 
     bound_width(width: number): SectionLayout {
-        console.log(this.inner.width)
         const bound = this.inner.width.tag === "Absolute" ? Math.min(this.inner.width.value, width)
             : this.inner.width.tag === "Fill" ? width
                 : null;
-
-        console.log("wtf")
 
         if (bound === null) {
             throw new Error("Cannot bound width of non-unitized widths!")
@@ -180,21 +168,17 @@ export class SectionLayout {
     }
 
     scale_width(document_width: number): SectionLayout {
-        console.debug("Scaling width of", this, "to", document_width);
         if (this.is_ref()) {
             throw new Error("Cannot scale width of uninstantiated layout")
         }
-        console.debug(this.inner.scale_width(document_width));
         return new SectionLayout(this.inner.scale_width(document_width));
     }
 
     normalize(width: number, font_dict: FontDict): SectionLayout {
         console.debug(
-            `Normalizing document, checking if ${this} is instantiated...`,
+            `Normalizing document, checking if document is instantiated...`,
         );
-        console.log(this.is_instantiated())
         if (!this.is_instantiated()) {
-            console.error("Document is not instantiated:", this);
             throw Error("Cannot normalize uninstantiated layout");
         }
 
@@ -239,11 +223,12 @@ export class SectionLayout {
 
     break_lines(font_dict: FontDict): SectionLayout {
         switch (this.type_()) {
-            case "Stack":{
+            case "Stack": {
                 const stack = (this.inner as Stack);
                 stack.elements = stack.elements.map(e => e.break_lines(font_dict));
-                return this;}
-            case "Row":{
+                return this;
+            }
+            case "Row": {
                 const row = (this.inner as Row);
                 if (row.is_frozen) {
                     const total_width = row
@@ -260,8 +245,9 @@ export class SectionLayout {
                     const lines = row.break_lines(font_dict).map(l => new SectionLayout(l));
                     return new SectionLayout(new Stack(lines, row.margin, row.alignment, row.width));
                 }
-                return this;}
-            case "Elem":{
+                return this;
+            }
+            case "Elem": {
                 if (this.is_ref()) {
                     throw new Error("Cannot break lines of uninstantiated layout")
                 }
@@ -274,7 +260,7 @@ export class SectionLayout {
                     elem.alignment,
                     elem.width,
                 ));
-}
+            }
 
         }
     }
@@ -284,32 +270,30 @@ export class SectionLayout {
         const textbox_positions: [Box, Elem][] = [];
         const top_left: Point = new Point(0.0, 0.0);
         const depth = this.compute_textbox_positions(textbox_positions, top_left, font_dict);
-        console.log(depth)
         const bounding_box = new Box(
-            new Point (0.0, 0.0),
-            new Point (Width.get_fixed_unchecked(this.width()), depth),
+            new Point(0.0, 0.0),
+            new Point(Width.get_fixed_unchecked(this.width()), depth),
         );
-        return new ElementBox (bounding_box, textbox_positions);
+        return new ElementBox(bounding_box, textbox_positions);
     }
-    
+
     compute_textbox_positions(
         textbox_positions: [Box, Elem][], top_left: Point, font_dict: FontDict,
-    ) : number {
+    ): number {
         let depth = top_left.y;
-        switch(this.type_()) {
+        switch (this.type_()) {
             case "Stack": {
                 const stack = (this.inner as Stack);
                 for (const element of stack.elements) {
                     depth = element.compute_textbox_positions(textbox_positions, top_left, font_dict);
                     top_left = top_left.move_y_to(depth);
                 }
-                console.log("Depth:", depth)
                 return depth;
             }
             case "Row": {
                 const row = (this.inner as Row);
                 let per_elem_space: number = 0.0;
-                switch(row.alignment) {
+                switch (row.alignment) {
                     case "Center":
                         top_left = top_left.move_x_by((Width.get_fixed_unchecked(row.width) - row.elements_width()) / 2.0);
                         break;
@@ -320,28 +304,38 @@ export class SectionLayout {
                         per_elem_space = (Width.get_fixed_unchecked(row.width) - row.elements_width()) / (row.elements.length - 1);
                         break;
                 }
-    
+
                 for (const element of row.elements) {
                     depth =
                         element.compute_textbox_positions(textbox_positions, top_left, font_dict);
                     top_left =
                         top_left.move_x_by(Width.get_fixed_unchecked(element.width()) + per_elem_space);
                 }
-                console.log("DepthRow:", depth)
                 return depth;
             }
-                
+
             case "Elem": {
                 const elem = (this.inner as Elem);
                 if (elem.is_ref) {
                     throw new Error("Cannot compute textbox positions of uninstantiated layout")
                 }
-                const width = Width.get_fixed_unchecked(elem.text_width);
                 const height = elem.font.get_height(font_dict);
+                const width = Width.get_fixed_unchecked(elem.text_width);
+
+                switch (elem.alignment) {
+                    case "Center":
+                        top_left = top_left.move_x_by((Width.get_fixed_unchecked(elem.width) - width) / 2.0);
+                        break;
+                    case "Right":
+                        top_left = top_left.move_x_by(Width.get_fixed_unchecked(elem.width) - width);
+                        break;
+                    case "Justified":
+                        throw new Error("Cannot compute textbox positions of justified element")
+                }
+
                 const textbox =
-                    new Box (top_left, top_left.move_x_by(width).move_y_by(height));
+                    new Box(top_left, top_left.move_x_by(width).move_y_by(height));
                 textbox_positions.push([textbox, elem]);
-                console.log("DepthElem:", top_left.y + height)
                 return top_left.y + height;
             }
         }
@@ -391,15 +385,13 @@ export class Stack {
         const bound = this.width.tag === "Absolute" ? Math.min(this.width.value, width)
             : this.width.tag === "Fill" ? width
                 : null;
-
         if (bound === null) {
             throw new Error("Cannot bound width of non-unitized widths!")
         }
-        console.log(this.elements)
         return new Stack(this.elements.map(e => e.bound_width(bound)), this.margin, this.alignment, Width.absolute(bound));
     }
 
-    scale_width(w: number) : Stack {
+    scale_width(w: number): Stack {
         return this.with_elements(this.elements.map(e => e.scale_width(w))).with_width(Width.scale(this.width, w));
     }
 }
@@ -461,11 +453,11 @@ export class Row {
         return new Row(this.elements.map(e => e.bound_width(bound)), this.is_frozen, this.margin, this.alignment, Width.absolute(bound));
     }
 
-    scale_width(w: number) : Row {
+    scale_width(w: number): Row {
         return this.with_elements(this.elements.map(e => e.scale_width(w))).with_width(Width.scale(this.width, w));
     }
 
-    break_lines(font_dict: FontDict) : Row[] {
+    break_lines(font_dict: FontDict): Row[] {
         const lines: Row[] = [];
         let current_line: SectionLayout[] = [];
         let current_width = 0.0;
@@ -549,13 +541,11 @@ export class Elem {
         return new Elem(this.item, this.url, this.is_ref, is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
     }
 
-    scale_width(w: number) : Elem {
-        return this.with_width(Width.scale(this.width, w));   
+    scale_width(w: number): Elem {
+        return this.with_width(Width.scale(this.width, w));
     }
 
-    fill_fonts(fonts: FontDict) : Elem {
-        console.debug("Filling font of", this, "with", fonts);
-        console.debug(typeof this.font)
+    fill_fonts(fonts: FontDict): Elem {
         const text_width_with_font = this.font.get_width(this.item, fonts);
         if (this.is_fill) {
             return this.with_width(Width.absolute(Math.min(Width.get_fixed_unchecked(this.width), text_width_with_font)))
@@ -565,18 +555,34 @@ export class Elem {
         }
     }
 
-    break_lines(font_dict: FontDict) : Elem[] {
+    justified_lines(lines: Elem[], font_dict: FontDict): Elem[] {
+        const rowLines = [];
+        for (const line of lines) {
+            const words = line.item.split(/\s+/);
+            const row = new Row([], false, line.margin, line.alignment, line.width);
+            words.forEach(word => {
+                const word_width = this.font.get_width(word, font_dict);
+                row.elements.push(
+                    new SectionLayout(new Elem(word, null, false, false, Width.absolute(word_width), this.font, Margin.default_(), Alignment.default_(), Width.absolute(word_width))),
+                );
+            });
+            rowLines.push(row);
+        }
+        return rowLines;
+    }
+
+    break_lines(font_dict: FontDict): Elem[] {
         if (Width.get_fixed_unchecked(this.text_width) <= Width.get_fixed_unchecked(this.width)) {
             return [this]
         }
 
-        const lines : Elem[] = [];
+        const lines: Elem[] = [];
 
         // todo: I'm sure this implementation is pretty buggy. Note to future me, fix
         // this.
         const words = this.item.split(/\s+/);
         let line = "";
-        for(const word of words) {
+        for (const word of words) {
             const candidate_line = line + " " + word;
             const candidate_width: number = this.font.get_width(candidate_line, font_dict);
 
@@ -594,7 +600,7 @@ export class Elem {
         }
 
         line = line.slice(0, -1);
-        if (line !== "") {
+        if (line.length > 0) {
             const line_width = this.font.get_width(line, font_dict);
             lines.push(
                 this.with_item(line)
@@ -602,10 +608,14 @@ export class Elem {
             );
         }
 
+        if (this.alignment === "Justified") {
+            return this.justified_lines(lines, font_dict);
+        }
+
         return lines;
     }
 
-    bound_width(width: number) : Elem {
+    bound_width(width: number): Elem {
         if (!Width.is_fill(this.width)) {
             return this.with_width(Width.absolute(Math.min(Width.get_fixed_unchecked(this.width), width))).with_is_fill(false);
         } else {

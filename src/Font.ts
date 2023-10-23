@@ -41,17 +41,17 @@ export class Font {
     }
     
     full_name() : string {
-        return this.name + "-" + this.weight + this.style;
+        return this.name + "-" + this.weight + (this.style === "Italic" ? "Italic" : "");
     }
 
     get_width(text: string, fonts: FontDict) : number {
         const font = fontkit.openSync("/Users/akeles/Programming/projects/cvdl/cvdl/assets/Exo/static/Exo-Medium.ttf");
-        return (font.layout(text).glyphs.reduce((acc, glyph) => acc + glyph.advanceWidth, 0) / font.unitsPerEm) * 12;
+        return (font.layout(text).glyphs.reduce((acc, glyph) => acc + glyph.advanceWidth, 0) / font.unitsPerEm) * this.size;
     }
 
     get_height(fonts: FontDict) : number {
         const font = fontkit.openSync("/Users/akeles/Programming/projects/cvdl/cvdl/assets/Exo/static/Exo-Medium.ttf");
-        return (font.bbox.height / font.unitsPerEm) * 12;
+        return (font.bbox.height / font.unitsPerEm) * this.size;
     }
     
 }

@@ -87,8 +87,6 @@ export class LocalStorage {
 
     load_layout_schema(schema_name: string): LayoutSchema {
         const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
-        console.log(JSON.parse(layout_schemas.toString()));
-        console.log(schema_name);
         return LayoutSchema.fromJson(JSON.parse(layout_schemas.toString()).find((schema: any) => schema.schema_name === schema_name));
     }
 

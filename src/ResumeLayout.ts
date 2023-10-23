@@ -50,7 +50,6 @@ export class ResumeLayout {
 
     // eslint-disable-next-line @typescript-eslint/no-explicit-any
     static fromJson(json: any): ResumeLayout {
-        console.log(json);
         return new ResumeLayout(
             json.schema_name,
             ColumnType.fromJson(json.column_type),

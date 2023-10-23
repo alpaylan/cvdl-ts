@@ -5,7 +5,8 @@ import { Elem } from "./Layout";
 import { LayoutSchema } from "./LayoutSchema";
 import { Resume } from "./Resume";
 import { vertical_margin, ResumeLayout } from "./ResumeLayout";
-
+import fs from 'fs';
+import fontkit from 'fontkit';
 export class ElementBox {
     bounding_box: Box;
     elements: [Box, Elem][];
@@ -40,22 +41,62 @@ export type RenderProps = {
 }
 
 export class FontDict {
-    fonts: Map<string, Font>;
+    fonts: Map<string, Buffer>;
 
     constructor() {
         this.fonts = new Map();
     }
 
-    load_fonts_from_schema(schema: LayoutSchema) {
-        schema
-            .fonts()
-            .forEach(font => {
-                console.log(`Loading font ${font.full_name()}`);
-                this.fonts.set(font.full_name(), font);
-            });
+    load_font_from_path(name: string, path: string) {
+        const data = fs.readFileSync(path);
+        // const font = fontkit.create(data);
+        this.fonts.set(name, data);
+    }
+    async load_fonts_from_schema(schema: LayoutSchema) {
+        for (const font of schema.fonts()) {
+            console.log(`Loading font ${font.full_name()}`);
+            if (this.fonts.has(font.full_name())) {
+                console.log(`Font ${font.full_name()} is already loaded`);
+                continue;
+            }
+            console.log(`SOurce ${font.source}`);
+            switch (font.source) {
+                case "Local":
+                    this.load_font_from_path(
+                        font.full_name(),
+                        `assets/${font.name}/static/${font.full_name()}.ttf`
+                    );
+                    break;
+                case "System":
+                    throw new Error("System fonts are not supported yet");
+                case "Remote": {
+                    const response = await fetch(`https://gwfh.mranftl.com/api/fonts/${font.name.toLowerCase()}?subsets=latin`);
+                    if (response.ok) {
+                        const data = await response.json();
+                        for (const variant of data.variants) {
+                            console.log(`Loading font ${font.full_name()}`);
+                            console.log(`Font style: ${variant.fontStyle}, FontWeight: ${variant.fontWeight}`);
+                            if (variant.fontStyle === font.style.toLowerCase() && variant.fontWeight === font.weight) {
+                                const response = await fetch(`${variant.ttf}`);
+                                if (response.ok) {
+                                    const data = await response.arrayBuffer();
+                                    // const fontData = fontkit.create(Buffer.from(data));
+                                    this.fonts.set(font.full_name(), Buffer.from(data));
+                                } else {
+                                    throw new Error(`Could not load font ${font.name}`);
+
+                                }
+                            }
+                        }
+                    } else {
+                        throw new Error(`Could not load font ${font.name}`);
+                    }
+                }
+            }
+        }
     }
 
-    get_font(name: string): Font {
+    get_font(name: string) {
         const font = this.fonts.get(name);
         if (font === undefined) {
             throw new Error(`Could not find font ${name}`);
@@ -64,7 +105,7 @@ export class FontDict {
     }
 }
 
-export function render({ resume, layout_schemas, data_schemas, resume_layout }: RenderProps): [FontDict, ElementBox[][]] {
+export async function render({ resume, layout_schemas, data_schemas, resume_layout }: RenderProps): Promise<[FontDict, ElementBox[][]]> {
     // Each box contains a set of elements(positioned by 0x0 and projected into its bounding box)
     const boxes: ElementBox[] = [];
     const font_dict = new FontDict();
@@ -77,7 +118,7 @@ export function render({ resume, layout_schemas, data_schemas, resume_layout }: 
         ? width
         : (width - vertical_margin(resume_layout.column_type) / 2.0);
 
-    resume.sections.forEach(section => {
+    for (const section of resume.sections) {
         // Render Section Header
         // 1. Find the layout schema for the section
         console.log("Computing section: ", section.section_name);
@@ -116,9 +157,7 @@ export function render({ resume, layout_schemas, data_schemas, resume_layout }: 
             if (layout_schema == undefined) {
                 throw new Error(`Could not find layout schema ${section.layout_schema}`);
             }
-
-            font_dict.load_fonts_from_schema(layout_schema);
-
+            await font_dict.load_fonts_from_schema(layout_schema);
             // 2. Find the data schema for the section
             // eslint-disable-next-line @typescript-eslint/no-unused-vars
             const _data_schema = data_schemas
@@ -132,8 +171,8 @@ export function render({ resume, layout_schemas, data_schemas, resume_layout }: 
 
             boxes.push(result);
         }
-    });
-
+    }
+    
     let current_y = resume_layout.margin.top;
     let current_x = resume_layout.margin.left;
 
@@ -143,7 +182,7 @@ export function render({ resume, layout_schemas, data_schemas, resume_layout }: 
     for (const box of boxes) {
         if (current_y + box.bounding_box.height() > resume_layout.height) {
             current_y = resume_layout.margin.top;
-            current_x += column_width +  vertical_margin(resume_layout.column_type);
+            current_x += column_width + vertical_margin(resume_layout.column_type);
             if (current_x > width) {
                 pages.push([]);
                 current_x = resume_layout.margin.left;

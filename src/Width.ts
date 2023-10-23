@@ -49,13 +49,10 @@ export module Width {
     }
 
     export function scale(self: Width, scale: number) : Width {
-        console.log("Scaling width: ", self, scale);
         switch (self.tag) {
             case "Percent":
-                console.log(absolute(self.value * scale / 100));
                 return absolute(self.value * scale / 100);
             case "Absolute":
-                console.log(absolute(self.value * scale));
                 return self;
             case "Fill":
                 return fill();
