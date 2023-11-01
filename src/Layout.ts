@@ -10,12 +10,16 @@ import { ElementBox, FontDict } from "./AnyLayout";
 import { Point } from "./Point";
 
 export type ContainerType = Stack | Row;
-
+export type LayoutType = Stack | Row | Elem;
 export class SectionLayout {
     inner: Stack | Row | Elem;
 
     constructor(inner: Stack | Row | Elem) {
         this.inner = inner;
+    }
+
+    copy() {
+        return new SectionLayout(this.inner.copy());
     }
 
     static constrMap(tag: string) {
@@ -45,7 +49,7 @@ export class SectionLayout {
             case 'FrozenRow': {
                 const container = SectionLayout.constrMap(key) as ContainerType;
                 container.elements = json[key].elements.map((element: any) => SectionLayout.fromJson(element));
-                container.margin = json[key].margin;
+                container.margin = Margin.fromJson(json[key].margin);
                 container.alignment = json[key].alignment;
                 container.width = Width.fromJson(json[key].width);
                 return new SectionLayout(container);
@@ -53,7 +57,7 @@ export class SectionLayout {
             case 'Ref': case 'Text': {
                 const inner = SectionLayout.constrMap(key) as Elem;
                 inner.item = json[key].item;
-                inner.margin = json[key].margin;
+                inner.margin = Margin.fromJson(json[key].margin);
                 inner.alignment = json[key].alignment;
                 inner.width = Width.fromJson(json[key].width);
                 inner.text_width = Width.fromJson(json[key].text_width);
@@ -306,8 +310,8 @@ export class SectionLayout {
                 }
 
                 for (const element of row.elements) {
-                    depth =
-                        element.compute_textbox_positions(textbox_positions, top_left, font_dict);
+                    depth = Math.max(depth,
+                        element.compute_textbox_positions(textbox_positions, top_left, font_dict));
                     top_left =
                         top_left.move_x_by(Width.get_fixed_unchecked(element.width()) + per_elem_space);
                 }
@@ -355,6 +359,15 @@ export class Stack {
         this.margin = margin;
         this.alignment = alignment;
         this.width = width;
+    }
+
+    copy() {
+        return new Stack(
+            this.elements.map((e) => e.copy()),
+            this.margin.copy(),
+            this.alignment,
+            Width.copy(this.width)
+        )
     }
 
     static default_(): Stack {
@@ -411,6 +424,16 @@ export class Row {
         this.margin = margin;
         this.alignment = alignment;
         this.width = width;
+    }
+
+    copy() {
+        return new Row(
+            this.elements.map((e) => e.copy()),
+            this.is_frozen,
+            this.margin.copy(),
+            this.alignment,
+            Width.copy(this.width)
+        )
     }
 
     static default_(): Row {
@@ -509,6 +532,20 @@ export class Elem {
         this.width = width;
     }
 
+    copy() {
+        return new Elem(
+            this.item,
+            this.url,
+            this.is_ref,
+            this.is_fill,
+            Width.copy(this.text_width),
+            this.font,
+            this.margin.copy(),
+            this.alignment,
+            Width.copy(this.width)
+        )
+    }
+
     static default_(): Elem {
         return new Elem("", null, false, false, Width.default_(), Font.default_(), Margin.default_(), Alignment.default_(), Width.default_());
     }
@@ -555,7 +592,7 @@ export class Elem {
         }
     }
 
-    justified_lines(lines: Elem[], font_dict: FontDict): Elem[] {
+    justified_lines(lines: Elem[], font_dict: FontDict): Row[] {
         const rowLines = [];
         for (const line of lines) {
             const words = line.item.split(/\s+/);
@@ -571,7 +608,7 @@ export class Elem {
         return rowLines;
     }
 
-    break_lines(font_dict: FontDict): Elem[] {
+    break_lines(font_dict: FontDict): LayoutType[] {
         if (Width.get_fixed_unchecked(this.text_width) <= Width.get_fixed_unchecked(this.width)) {
             return [this]
         }
@@ -581,32 +618,34 @@ export class Elem {
         // todo: I'm sure this implementation is pretty buggy. Note to future me, fix
         // this.
         const words = this.item.split(/\s+/);
-        let line = "";
-        for (const word of words) {
-            const candidate_line = line + " " + word;
-            const candidate_width: number = this.font.get_width(candidate_line, font_dict);
+        const widths = words.map((word) => this.font.get_width(word, font_dict));
+        const space_width = this.font.get_width(" ", font_dict);
 
-            if (candidate_width > Width.get_fixed_unchecked(this.width)) {
-                line = line.slice(0, -1);
+        let start = 0;
+        let width = widths[0];
+        const max_width = Width.get_fixed_unchecked(this.width);
+        for (let i = 1; i < words.length; i++) {
+            const candidate_width = width + space_width + widths[i];
+            if (candidate_width > max_width) {
+                const line = words.slice(start, i).join(" ");
                 const line_width = this.font.get_width(line, font_dict);
                 lines.push(
                     this.with_item(line)
                         .with_text_width(Width.absolute(line_width)),
                 );
-                line = "";
+                start = i;
+                width = widths[i];
+            } else {
+                width += space_width + widths[i];
             }
-
-            line += word + " ";
         }
 
-        line = line.slice(0, -1);
-        if (line.length > 0) {
-            const line_width = this.font.get_width(line, font_dict);
-            lines.push(
-                this.with_item(line)
-                    .with_text_width(Width.absolute(line_width)),
-            );
-        }
+        const line = words.slice(start).join(" ");
+        const line_width = this.font.get_width(line, font_dict);
+        lines.push(
+            this.with_item(line)
+                .with_text_width(Width.absolute(line_width)),
+        );
 
         if (this.alignment === "Justified") {
             return this.justified_lines(lines, font_dict);

@@ -1,28 +1,67 @@
-import PDFDocument from 'pdfkit';
-import fs from 'fs';
+import blobStream from "blob-stream";
+import { ElementBox, FontDict, render as anyRender } from "./AnyLayout";
+import { Storage } from "./Storage";
+import PdfDocument from 'pdfkit';
+import { Resume } from "./Resume";
+import { DataSchema } from "./DataSchema";
+import { LayoutSchema } from "./LayoutSchema";
+import { ResumeLayout } from "./ResumeLayout";
 
-import { render as anyRender } from "./AnyLayout";
-import { LocalStorage } from "./LocalStorage";
+export type RenderResult = {
+    blob: Blob,
+    fontDict: FontDict,
+    pages: ElementBox[][]
+}
+
+export type RenderProps = {
+    resume_name?: string,
+    resume?: Resume,
+    data_schemas?: DataSchema[],
+    layout_schemas?: LayoutSchema[],
+    resume_layout?: ResumeLayout,
+    storage: Storage,
+    fontDict?: FontDict,
+    debug: boolean,
+}
 
 export const render = async (
-    resume_name: string,
-    localStorage: LocalStorage
+    { resume_name, resume, data_schemas, layout_schemas, resume_layout, storage, fontDict, debug = false }: RenderProps
 ) => {
-    const resume = localStorage.load_resume(resume_name);
+    let start_time = Date.now();
 
-    const data_schemas = resume.data_schemas().map((schema) => localStorage.load_data_schema(schema));
+    if (!resume && !resume_name) {
+        throw "Rendering requires either resume_name or resume";
+    }
 
-    const layout_schemas = resume.layout_schemas().map((schema) => localStorage.load_layout_schema(schema));
+    if (!resume) {
+        resume = await storage.load_resume(resume_name);
+    }
 
-    const resume_layout = localStorage.load_resume_layout(resume.resume_layout());
+    if (!data_schemas) {
+        data_schemas = await Promise.all(resume.data_schemas().map((schema) => storage.load_data_schema(schema)));
+    }
 
-    const doc = new PDFDocument();
-    doc.pipe(fs.createWriteStream('output.pdf'));
+    if (!layout_schemas) {
+        layout_schemas = await Promise.all(resume.layout_schemas().map((schema) => storage.load_layout_schema(schema)));
+    }
 
+    if (!resume_layout) {
+        resume_layout = await storage.load_resume_layout(resume.resume_layout());
+    }
 
+    let end_time = Date.now();
+
+    console.info(`Loading time: ${end_time - start_time}ms`);
+
+    const doc = new PdfDocument();
+    // doc.pipe(fs.createWriteStream('output.pdf'));
+    const stream = doc.pipe(blobStream());
+
+    start_time = Date.now();
     const [font_dict, pages] = await
-        anyRender({ layout_schemas, resume, data_schemas, resume_layout });
-
+        anyRender({ layout_schemas, resume, data_schemas, resume_layout, storage, fontDict });
+    end_time = Date.now();
+    console.info(`Rendering time: ${end_time - start_time}ms`);
     console.log("Constructing printpdf font dictionary...");
 
     console.log("Rendering the document...");
@@ -33,10 +72,9 @@ export const render = async (
         console.log("Registering fonts...");
         for (const [font_name, font] of font_dict.fonts.entries()) {
             console.log(`Registering font ${font_name}`);
-            doc.registerFont(font_name, font);
+            doc.registerFont(font_name, font.stream.buffer);
         }
-    }
-    catch (e) {
+    } catch (e) {
         console.error(e);
     }
     console.log("Rendering the document...");
@@ -48,16 +86,22 @@ export const render = async (
 
         boxes.forEach((box) => {
             const elements = box.elements;
-            const bounding_box = box.bounding_box;
+            if (debug) {
+                doc.rect(box.bounding_box.top_left.x, box.bounding_box.top_left.y, box.bounding_box.width(), box.bounding_box.height()).stroke();
+            }
             for (const [box_, element] of elements) {
-                console.debug(
+                console.log(
                     `(${box_.top_left.x}, ${box_.top_left.y})(${box_.bottom_right.x}, ${box_.bottom_right.y}): ${element.item}`
                 );
+                console.log(element.font.full_name());
+
                 doc.
                     font(element.font.full_name()).
                     fontSize(element.font.size).
                     text(element.item, box_.top_left.x, box_.top_left.y, { lineBreak: false });
-                doc.rect(box_.top_left.x, box_.top_left.y, box_.width(), box_.height()).stroke();
+                if (debug) {
+                    // doc.rect(box_.top_left.x, box_.top_left.y, box_.width(), box_.height()).stroke();
+                }
             }
         });
     }
@@ -65,4 +109,17 @@ export const render = async (
 
     console.log("Document is saved to output.pdf");
     doc.end();
+
+    return new Promise<RenderResult>((resolve) => {
+        stream.on("finish", () => {
+            resolve(
+                {
+                    blob: stream.toBlob("application/pdf"),
+                    fontDict: fontDict,
+                    pages: pages
+                }
+            )
+        });
+    });
+
 }

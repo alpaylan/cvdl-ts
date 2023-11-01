@@ -1,5 +1,4 @@
 import { FontDict } from "./AnyLayout";
-import fontkit from "fontkit";
 
 export class Font {
     name: string;
@@ -45,12 +44,12 @@ export class Font {
     }
 
     get_width(text: string, fonts: FontDict) : number {
-        const font = fontkit.openSync("/Users/akeles/Programming/projects/cvdl/cvdl/assets/Exo/static/Exo-Medium.ttf");
+        const font = fonts.get_font(this.full_name());
         return (font.layout(text).glyphs.reduce((acc, glyph) => acc + glyph.advanceWidth, 0) / font.unitsPerEm) * this.size;
     }
 
     get_height(fonts: FontDict) : number {
-        const font = fontkit.openSync("/Users/akeles/Programming/projects/cvdl/cvdl/assets/Exo/static/Exo-Medium.ttf");
+        const font = fonts.get_font(this.full_name());
         return (font.bbox.height / font.unitsPerEm) * this.size;
     }
     

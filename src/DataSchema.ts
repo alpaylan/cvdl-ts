@@ -23,11 +23,19 @@ export class DataSchema {
         this.item_schema = item_schema;
     }
 
-    static fromJson(json: {schema_name: string, header_schema: Field[], item_schema: Field[]}): DataSchema {
+    static fromJson(json: unknown): DataSchema {
+        if (typeof json !== "object" || json === null) {
+            throw new Error("DataSchema must be an object");
+        }
+
+        if (!("schema_name" in json) || !("header_schema" in json) || !("item_schema" in json)) {
+            throw new Error("DataSchema must have a schema_name, header_schema, and item_schema");
+        }
+
         return new DataSchema(
-            json.schema_name,
-            json.header_schema,
-            json.item_schema,
+            json.schema_name as string,
+            json.header_schema as Field[],
+            json.item_schema as Field[],
         );
     }
 }

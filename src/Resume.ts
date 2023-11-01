@@ -4,7 +4,13 @@ export class Resume {
     layout: string;
     sections: ResumeSection[];
 
-    constructor(resume: unknown) {
+    constructor(layout: string, sections: ResumeSection[]) {
+        this.layout = layout;
+        this.sections = sections;
+    }
+
+    static fromJson(resume: unknown) : Resume {
+        console.log(resume);
         if (typeof resume !== "object") {
             throw new Error("Resume must be an object");
         }
@@ -16,9 +22,19 @@ export class Resume {
         if (!("layout" in resume) || !("sections" in resume)) {
             throw new Error("Resume must have a layout");
         }
+        return new Resume(
+            resume.layout as string,
+            (resume.sections as unknown[]).map(section => ResumeSection.fromJson(section))
+        );
+    }
 
-        this.layout = resume.layout as string;
-        this.sections = (resume.sections as unknown[]).map(section => ResumeSection.fromJson(section))
+    static reducer(state: Resume, action: { type: string, payload: unknown }): Resume {
+        switch (action.type) {
+            case "update":
+                return Resume.fromJson(action.payload);
+            default:
+                return state;
+        }
     }
     data_schemas(): string[] {
         return this.sections.map(section => section.data_schema);
@@ -34,11 +50,20 @@ export class Resume {
 }
 
 export class ResumeSection {
-    section_name: string;
-    data_schema: string;
-    layout_schema: string;
-    data: Map<ItemName, ItemContent>;
-    items: Map<ItemName, ItemContent>[];
+    section_name: string = "";
+    data_schema: string = "";
+    layout_schema: string = "";
+    data: Map<ItemName, ItemContent> = new Map();
+    items: Map<ItemName, ItemContent>[] = [];
+
+    constructor() { 
+        this.section_name = "";
+        this.data_schema = "";
+        this.layout_schema = "";
+        this.data = new Map();
+        this.items = [];
+    }
+
 
     static fromJson(json: unknown): ResumeSection {
         const section = new ResumeSection();
@@ -99,8 +124,13 @@ export module ItemContent {
 
             return { tag: "Url", value: { url: json.url, text: json.text } };
         }
+
+        throw new Error("ItemContent must be a string, an array, or an object");
     }
 
+    export function None() : ItemContent {
+        return { tag: "None" };
+    }
     export function toString (item: ItemContent): string {
         if (item.tag === "None") {
             return "";
@@ -111,5 +141,6 @@ export module ItemContent {
         } else if (item.tag === "Url") {
             return item.value.text;
         }
+        return "";
     }
 }

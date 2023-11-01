@@ -26,15 +26,16 @@ import { Resume } from "./Resume";
 import { DataSchema } from "./DataSchema";
 import { LayoutSchema } from "./LayoutSchema";
 import { ResumeLayout } from "./ResumeLayout";
+import { Storage } from "./Storage";
 
-export class LocalStorage {
-    dir: string;
+export class LocalStorage implements Storage {
+    dir: string = "";
 
     constructor(dir: string) {
         this.dir = dir;
     }
 
-    initiate_local_storage() {
+    initiate_storage() : Promise<void> {
         // Create data_dir/resumes if it does not exist
         fs.mkdirSync(this.dir + "/resumes", { recursive: true });
 
@@ -50,59 +51,62 @@ export class LocalStorage {
         if (!fs.existsSync(this.dir + "/resume-layouts.json")) {
             fs.writeFileSync(this.dir + "/resume-layouts.json", "[]");
         }
+
+        return;
     }
 
-    list_resumes(): string[] {
+    async list_resumes(): Promise<string[]> {
         const files = fs.readdirSync(this.dir + "/resumes");
-        return files.map(file => file.replace(".json", ""));
+        return Promise.resolve(files.map(file => file.replace(".json", "")));
     }
 
-    list_data_schemas(): string[] {
+    async list_data_schemas(): Promise<string[]> {
         const data_schemas = fs.readFileSync(this.dir + "/data-schemas.json");
-        return JSON.parse(data_schemas.toString()).map((schema: any) => schema.schema_name);
+        return Promise.resolve(JSON.parse(data_schemas.toString()).map((schema: any) => schema.schema_name));
     }
 
-    list_layout_schemas(): string[] {
+    async list_layout_schemas(): Promise<string[]> {
         const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
-        return JSON.parse(layout_schemas.toString()).map((schema: any) => schema.schema_name);
+        return Promise.resolve(JSON.parse(layout_schemas.toString()).map((schema: any) => schema.schema_name));
     }
 
-    list_resume_layouts(): string[] {
+    async list_resume_layouts(): Promise<string[]> {
         const resume_layouts = fs.readFileSync(this.dir + "/resume-layouts.json");
-        return JSON.parse(resume_layouts.toString()).map((schema: any) => schema.schema_name);
+        return Promise.resolve(JSON.parse(resume_layouts.toString()).map((schema: any) => schema.schema_name));
     }
 
 
     // Loading Functions
 
-    load_resume(resume_name: string): Resume {
+    async load_resume(resume_name: string): Promise<Resume> {
         const resume = fs.readFileSync(this.dir + "/resumes/" + resume_name + ".json");
-        return new Resume(JSON.parse(resume.toString()));
+        return Promise.resolve(Resume.fromJson(JSON.parse(resume.toString())));
     }
 
-    load_data_schema(schema_name: string): DataSchema {
+    async load_data_schema(schema_name: string): Promise<DataSchema> {
         const data_schemas = fs.readFileSync(this.dir + "/data-schemas.json");
-        return DataSchema.fromJson(JSON.parse(data_schemas.toString()).find((schema: any) => schema.schema_name === schema_name));
+        return Promise.resolve(DataSchema.fromJson(JSON.parse(data_schemas.toString()).find((schema: any) => schema.schema_name === schema_name)));
     }
 
-    load_layout_schema(schema_name: string): LayoutSchema {
+    async load_layout_schema(schema_name: string): Promise<LayoutSchema> {
         const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
-        return LayoutSchema.fromJson(JSON.parse(layout_schemas.toString()).find((schema: any) => schema.schema_name === schema_name));
+        return Promise.resolve(LayoutSchema.fromJson(JSON.parse(layout_schemas.toString()).find((schema: any) => schema.schema_name === schema_name)));
     }
 
-    load_resume_layout(schema_name: string): ResumeLayout {
+    async load_resume_layout(schema_name: string): Promise<ResumeLayout> {
         const resume_layouts = fs.readFileSync(this.dir + "/resume-layouts.json");
-        return ResumeLayout.fromJson(JSON.parse(resume_layouts.toString()).find((schema: any) => schema.schema_name === schema_name));
+        return Promise.resolve(ResumeLayout.fromJson(JSON.parse(resume_layouts.toString()).find((schema: any) => schema.schema_name === schema_name)));
     }
 
 
     // Saving Functions
 
-    save_resume(resume_name: string, resume_data: Resume) {
+    save_resume(resume_name: string, resume_data: Resume) : Promise<void> {
         fs.writeFileSync(this.dir + "/resumes/" + resume_name + ".json", JSON.stringify(resume_data));
+        return;
     }
 
-    save_data_schema(data_schema: DataSchema) {
+    save_data_schema(data_schema: DataSchema) : Promise<void>  {
         const data_schemas = fs.readFileSync(this.dir + "/data-schemas.json");
         const data_schemas_json = JSON.parse(data_schemas.toString());
         const index = data_schemas_json.findIndex((schema: any) => schema.schema_name === data_schema.schema_name);
@@ -112,9 +116,10 @@ export class LocalStorage {
             data_schemas_json.push(data_schema);
         }
         fs.writeFileSync(this.dir + "/data-schemas.json", JSON.stringify(data_schemas_json));
+        return;
     }
 
-    save_layout_schema(layout_schema: LayoutSchema) {
+    save_layout_schema(layout_schema: LayoutSchema) : Promise<void>  {
         const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
         const layout_schemas_json = JSON.parse(layout_schemas.toString());
         const index = layout_schemas_json.findIndex((schema: any) => schema.schema_name === layout_schema.schema_name);
@@ -124,9 +129,10 @@ export class LocalStorage {
             layout_schemas_json.push(layout_schema);
         }
         fs.writeFileSync(this.dir + "/layout-schemas.json", JSON.stringify(layout_schemas_json));
+        return;
     }
 
-    save_resume_layout(resume_layout: ResumeLayout) {
+    save_resume_layout(resume_layout: ResumeLayout) : Promise<void>  {
         const resume_layouts = fs.readFileSync(this.dir + "/resume-layouts.json");
         const resume_layouts_json = JSON.parse(resume_layouts.toString());
         const index = resume_layouts_json.findIndex((schema: any) => schema.schema_name === resume_layout.schema_name);
@@ -136,5 +142,6 @@ export class LocalStorage {
             resume_layouts_json.push(resume_layout);
         }
         fs.writeFileSync(this.dir + "/resume-layouts.json", JSON.stringify(resume_layouts_json));
+        return;
     }
 }

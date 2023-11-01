@@ -31,6 +31,8 @@ export const vertical_margin = (columnType: ColumnType) => {
     } else if (columnType.tag === "DoubleColumn") {
         return columnType.vertical_margin;
     }
+
+    return 0;
 }
 
 export class ResumeLayout {

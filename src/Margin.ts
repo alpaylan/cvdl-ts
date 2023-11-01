@@ -12,6 +12,10 @@ export class Margin {
         this.right = right;
     }
 
+    copy() {
+        return new Margin(this.top, this.bottom, this.left, this.right);
+    }
+
     static default_() : Margin {
         return new Margin(0, 0, 0, 0);
     }

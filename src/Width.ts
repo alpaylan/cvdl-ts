@@ -18,6 +18,14 @@ export type Fill = {
 }
 
 export module Width {
+
+    export function copy(width: Width) {
+        return {
+            tag: width.tag,
+            value: width.tag === "Fill" ? undefined : width.value
+        };
+    }
+    
     export function default_() : Width {
         return fill();
     }
