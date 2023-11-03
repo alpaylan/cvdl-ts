@@ -18,7 +18,7 @@ export class SectionLayout {
         this.inner = inner;
     }
 
-    copy() {
+    copy() : SectionLayout {
         return new SectionLayout(this.inner.copy());
     }
 
@@ -141,6 +141,7 @@ export class SectionLayout {
         if (text === undefined) {
             return new SectionLayout(new Stack([], Margin.default_(), Alignment.default_(), Width.default_()));
         } else {
+            // @ts-ignore
             element.item = ItemContent.toString(text);
             element.is_ref = false;
             if (text.tag === "Url") {
@@ -361,7 +362,7 @@ export class Stack {
         this.width = width;
     }
 
-    copy() {
+    copy() : Stack {
         return new Stack(
             this.elements.map((e) => e.copy()),
             this.margin.copy(),

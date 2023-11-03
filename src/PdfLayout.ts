@@ -34,6 +34,9 @@ export const render = async (
     }
 
     if (!resume) {
+        if (!resume_name) {
+            throw "Rendering requires resume_name";
+        }
         resume = await storage.load_resume(resume_name);
     }
 
@@ -49,6 +52,12 @@ export const render = async (
         resume_layout = await storage.load_resume_layout(resume.resume_layout());
     }
 
+    if (!fontDict) {
+        fontDict = new FontDict();
+    }
+
+
+    
     let end_time = Date.now();
 
     console.info(`Loading time: ${end_time - start_time}ms`);
@@ -115,6 +124,7 @@ export const render = async (
             resolve(
                 {
                     blob: stream.toBlob("application/pdf"),
+                    // @ts-ignore
                     fontDict: fontDict,
                     pages: pages
                 }

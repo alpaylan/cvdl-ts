@@ -19,34 +19,39 @@ export type Fill = {
 
 export module Width {
 
-    export function copy(width: Width) {
+    export function copy(width: Width): Width {
+        if (width.tag === "Fill") {
+            return fill();
+        }
+
         return {
             tag: width.tag,
-            value: width.tag === "Fill" ? undefined : width.value
+            value: width.value
         };
+
     }
-    
-    export function default_() : Width {
+
+    export function default_(): Width {
         return fill();
     }
 
-    export function percent(value: number) : Width {
+    export function percent(value: number): Width {
         return { tag: "Percent", value: value };
     }
 
-    export function absolute(value: number) : Width {
+    export function absolute(value: number): Width {
         return { tag: "Absolute", value: value };
     }
 
-    export function fill() : Width {
+    export function fill(): Width {
         return { tag: "Fill" };
     }
 
-    export function is_fill(self: Width) : boolean {
+    export function is_fill(self: Width): boolean {
         return self.tag === "Fill";
     }
 
-    export function get_fixed_unchecked(self: Width) : number {
+    export function get_fixed_unchecked(self: Width): number {
         switch (self.tag) {
             case "Percent":
             case "Absolute":
@@ -56,7 +61,7 @@ export module Width {
         }
     }
 
-    export function scale(self: Width, scale: number) : Width {
+    export function scale(self: Width, scale: number): Width {
         switch (self.tag) {
             case "Percent":
                 return absolute(self.value * scale / 100);

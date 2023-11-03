@@ -1,147 +1,124 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
 
-/// This module provides the abstractions for interacting with persistent storage.
-/// The library follows the directory structure below:
-///
-/// projectdir/com.cvdl.cvdl/
-/// ├── data/
-///        ├── resumes
-///             ├── resume1.json
-///             ├── resume2.json
-///        ├── data-schemas.json
-///        ├── layout-schemas.json
-///        |── resume-layouts.json
-///
-/// The resume.json files contain the resume information, as well as references to the
-/// schema names.
-///
-/// This module provides 3 types of functionalities for all 4 data types:
-///     1. List
-///     2. Load
-///     3. Save
-
-// Initiation Function
-import fs from "fs";
-import { Resume } from "./Resume";
 import { DataSchema } from "./DataSchema";
+import { Font } from "./Font";
 import { LayoutSchema } from "./LayoutSchema";
+import { Margin } from "./Margin";
+import { Resume } from "./Resume";
 import { ResumeLayout } from "./ResumeLayout";
 import { Storage } from "./Storage";
-
 export class LocalStorage implements Storage {
-    dir: string = "";
-
-    constructor(dir: string) {
-        this.dir = dir;
-    }
-
-    initiate_storage() : Promise<void> {
-        // Create data_dir/resumes if it does not exist
-        fs.mkdirSync(this.dir + "/resumes", { recursive: true });
-
-        // Create data_dir/data-schemas.json if it does not exist
-        if (!fs.existsSync(this.dir + "/data-schemas.json")) {
-            fs.writeFileSync(this.dir + "/data-schemas.json", "[]");
-        }
-        // Create data_dir/layout-schemas.json if it does not exist
-        if (!fs.existsSync(this.dir + "/layout-schemas.json")) {
-            fs.writeFileSync(this.dir + "/layout-schemas.json", "[]");
-        }
-        // Create data_dir/resume-layouts.json if it does not exist
-        if (!fs.existsSync(this.dir + "/resume-layouts.json")) {
-            fs.writeFileSync(this.dir + "/resume-layouts.json", "[]");
+    async initiate_storage(): Promise<void> {
+        if (!localStorage.getItem("resumes")) {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/resumes/resume2.json").then((response) => {
+                response.json().then((resume) => {
+                    localStorage.setItem("resumes", JSON.stringify([{ name: "resume2", data: resume }]));
+                });
+            });
         }
 
-        return;
+        if (!localStorage.getItem("data_schemas")) {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/data-schemas.json").then((response) => {
+                response.json().then((data_schemas) => {
+                    localStorage.setItem("data_schemas", JSON.stringify(data_schemas));
+                });
+            });
+        }
+
+        if (!localStorage.getItem("section_layouts")) {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas.json").then((response) => {
+                response.json().then((section_layouts) => {
+                    localStorage.setItem("section_layouts", JSON.stringify(section_layouts));
+                });
+            });
+        }
+
+        if (!localStorage.getItem("resume_layouts")) {
+            const response = await fetch("https://d2bnplhbawocbk.cloudfront.net/data/resume-layouts.json");
+            const resume_layouts = await response.json();
+            console.log(resume_layouts);
+            localStorage.setItem("resume_layouts", JSON.stringify(resume_layouts));
+            return Promise.resolve();
+        }
+
     }
-
-    async list_resumes(): Promise<string[]> {
-        const files = fs.readdirSync(this.dir + "/resumes");
-        return Promise.resolve(files.map(file => file.replace(".json", "")));
+    list_resumes(): Promise<string[]> {
+        const resumes = JSON.parse(localStorage.getItem("resumes") || "[]").map((resume: any) => resume.name);
+        return Promise.resolve(resumes);
     }
-
-    async list_data_schemas(): Promise<string[]> {
-        const data_schemas = fs.readFileSync(this.dir + "/data-schemas.json");
-        return Promise.resolve(JSON.parse(data_schemas.toString()).map((schema: any) => schema.schema_name));
+    list_data_schemas(): Promise<string[]> {
+        const schemas = JSON.parse(localStorage.getItem("data_schemas") || "[]").map((schema: any) => schema.schema_name);
+        return Promise.resolve(schemas);
     }
-
-    async list_layout_schemas(): Promise<string[]> {
-        const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
-        return Promise.resolve(JSON.parse(layout_schemas.toString()).map((schema: any) => schema.schema_name));
+    list_layout_schemas(): Promise<string[]> {
+        const schemas = JSON.parse(localStorage.getItem("section_layouts") || "[]").map((schema: any) => schema.schema_name);
+        return Promise.resolve(schemas);
     }
-
-    async list_resume_layouts(): Promise<string[]> {
-        const resume_layouts = fs.readFileSync(this.dir + "/resume-layouts.json");
-        return Promise.resolve(JSON.parse(resume_layouts.toString()).map((schema: any) => schema.schema_name));
+    list_resume_layouts(): Promise<string[]> {
+        const schemas = JSON.parse(localStorage.getItem("resume_layouts") || "[]").map((schema: any) => schema.schema_name);
+        return Promise.resolve(schemas);
     }
-
-
-    // Loading Functions
-
-    async load_resume(resume_name: string): Promise<Resume> {
-        const resume = fs.readFileSync(this.dir + "/resumes/" + resume_name + ".json");
-        return Promise.resolve(Resume.fromJson(JSON.parse(resume.toString())));
+    load_resume(resume_name: string): Promise<Resume> {
+        console.log(resume_name);
+        const resume = JSON.parse(localStorage.getItem("resumes") || "[]").find((resume: any) => resume.name === resume_name);
+        if (!resume) {
+            throw new Error("Resume not found");
+        }
+        return Promise.resolve(Resume.fromJson(resume.data));
     }
-
-    async load_data_schema(schema_name: string): Promise<DataSchema> {
-        const data_schemas = fs.readFileSync(this.dir + "/data-schemas.json");
-        return Promise.resolve(DataSchema.fromJson(JSON.parse(data_schemas.toString()).find((schema: any) => schema.schema_name === schema_name)));
+    load_data_schema(schema_name: string): Promise<DataSchema> {
+        const schema = JSON.parse(localStorage.getItem("data_schemas") || "[]").find((schema: any) => schema.schema_name === schema_name);
+        if (!schema) {
+            throw new Error("Data schema not found");
+        }
+        return Promise.resolve(DataSchema.fromJson(schema));
     }
-
-    async load_layout_schema(schema_name: string): Promise<LayoutSchema> {
-        const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
-        return Promise.resolve(LayoutSchema.fromJson(JSON.parse(layout_schemas.toString()).find((schema: any) => schema.schema_name === schema_name)));
+    load_layout_schema(schema_name: string): Promise<LayoutSchema> {
+        const schema = JSON.parse(localStorage.getItem("section_layouts") || "[]").find((schema: any) => schema.schema_name === schema_name);
+        console.info(schema);
+        console.info(schema_name);
+        console.info(localStorage.getItem("section_layouts"));
+        if (!schema) {
+            throw new Error("Layout schema not found");
+        }
+        return Promise.resolve(LayoutSchema.fromJson(schema));
     }
-
-    async load_resume_layout(schema_name: string): Promise<ResumeLayout> {
-        const resume_layouts = fs.readFileSync(this.dir + "/resume-layouts.json");
-        return Promise.resolve(ResumeLayout.fromJson(JSON.parse(resume_layouts.toString()).find((schema: any) => schema.schema_name === schema_name)));
+    load_resume_layout(schema_name: string): Promise<ResumeLayout> {
+        console.log(schema_name);
+        const schema = JSON.parse(localStorage.getItem("resume_layouts") || "[]").find((schema: any) => schema.schema_name === schema_name);
+        if (!schema) {
+            throw new Error("Resume layout not found");
+        }
+        console.info(schema);
+        return Promise.resolve(ResumeLayout.fromJson(schema));
     }
-
-
-    // Saving Functions
-
-    save_resume(resume_name: string, resume_data: Resume) : Promise<void> {
-        fs.writeFileSync(this.dir + "/resumes/" + resume_name + ".json", JSON.stringify(resume_data));
-        return;
-    }
-
-    save_data_schema(data_schema: DataSchema) : Promise<void>  {
-        const data_schemas = fs.readFileSync(this.dir + "/data-schemas.json");
-        const data_schemas_json = JSON.parse(data_schemas.toString());
-        const index = data_schemas_json.findIndex((schema: any) => schema.schema_name === data_schema.schema_name);
-        if (index !== -1) {
-            data_schemas_json[index] = data_schema;
+    save_resume(resume_name: string, resume_data: Resume): Promise<void> {
+        const resumes = JSON.parse(localStorage.getItem("resumes") || "[]");
+        const resume = resumes.find((resume: any) => resume.name === resume_name);
+        if (!resume) {
+            resumes.push({ name: resume_name, data: resume_data.toJson() });
         } else {
-            data_schemas_json.push(data_schema);
+            resume.data = resume_data.toJson();
         }
-        fs.writeFileSync(this.dir + "/data-schemas.json", JSON.stringify(data_schemas_json));
-        return;
+        localStorage.setItem("resumes", JSON.stringify(resumes));
+        return Promise.resolve();
     }
-
-    save_layout_schema(layout_schema: LayoutSchema) : Promise<void>  {
-        const layout_schemas = fs.readFileSync(this.dir + "/layout-schemas.json");
-        const layout_schemas_json = JSON.parse(layout_schemas.toString());
-        const index = layout_schemas_json.findIndex((schema: any) => schema.schema_name === layout_schema.schema_name);
-        if (index !== -1) {
-            layout_schemas_json[index] = layout_schema;
-        } else {
-            layout_schemas_json.push(layout_schema);
-        }
-        fs.writeFileSync(this.dir + "/layout-schemas.json", JSON.stringify(layout_schemas_json));
-        return;
+    save_data_schema(data_schema: DataSchema): Promise<void> {
+        throw new Error("Method not implemented.");
     }
-
-    save_resume_layout(resume_layout: ResumeLayout) : Promise<void>  {
-        const resume_layouts = fs.readFileSync(this.dir + "/resume-layouts.json");
-        const resume_layouts_json = JSON.parse(resume_layouts.toString());
-        const index = resume_layouts_json.findIndex((schema: any) => schema.schema_name === resume_layout.schema_name);
-        if (index !== -1) {
-            resume_layouts_json[index] = resume_layout;
-        } else {
-            resume_layouts_json.push(resume_layout);
+    save_layout_schema(layout_schema: LayoutSchema): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    save_resume_layout(resume_layout: ResumeLayout): Promise<void> {
+        throw new Error("Method not implemented.");
+    }
+    async load_font(font: Font): Promise<Buffer> {
+        const path = `fonts/${font.full_name()}.ttf`;
+        if (!localStorage.getItem(path)) {
+            const response = await fetch(`https://d2bnplhbawocbk.cloudfront.net/data/${path}`);
+            const font_data = await response.arrayBuffer();
+            return Buffer.from(font_data);
         }
-        fs.writeFileSync(this.dir + "/resume-layouts.json", JSON.stringify(resume_layouts_json));
-        return;
+
+        throw new Error("Font not found");
     }
 }

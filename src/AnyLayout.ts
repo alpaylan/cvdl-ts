@@ -44,6 +44,7 @@ export type RenderProps = {
 }
 
 export class FontDict {
+    // @ts-ignore
     fonts: Map<string, fontkit.Font>;
 
     constructor() {
@@ -125,6 +126,7 @@ export async function render({ resume, layout_schemas, data_schemas, resume_layo
         start_time = Date.now();
         // Render Section Items
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        // @ts-nocheck
         for (const [_, item] of section.items.entries()) {
             console.log("Computing item");
             // 1. Find the layout schema for the section

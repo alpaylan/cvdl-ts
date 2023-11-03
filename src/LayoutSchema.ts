@@ -12,7 +12,6 @@ export class LayoutSchema {
     }
 
     static fromJson(json: any): LayoutSchema {
-        console.log(json);
         return new LayoutSchema(
             json.schema_name,
             SectionLayout.fromJson(json.header_layout_schema),

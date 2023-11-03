@@ -1,3 +1,4 @@
+import { Glyph } from "fontkit";
 import { FontDict } from "./AnyLayout";
 
 export class Font {
@@ -45,7 +46,7 @@ export class Font {
 
     get_width(text: string, fonts: FontDict) : number {
         const font = fonts.get_font(this.full_name());
-        return (font.layout(text).glyphs.reduce((acc, glyph) => acc + glyph.advanceWidth, 0) / font.unitsPerEm) * this.size;
+        return (font.layout(text).glyphs.reduce((acc: number, glyph: Glyph) => acc + glyph.advanceWidth, 0) / font.unitsPerEm) * this.size;
     }
 
     get_height(fonts: FontDict) : number {

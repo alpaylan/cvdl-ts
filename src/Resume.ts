@@ -9,7 +9,7 @@ export class Resume {
         this.sections = sections;
     }
 
-    static fromJson(resume: unknown) : Resume {
+    static fromJson(resume: unknown): Resume {
         console.log(resume);
         if (typeof resume !== "object") {
             throw new Error("Resume must be an object");
@@ -26,6 +26,13 @@ export class Resume {
             resume.layout as string,
             (resume.sections as unknown[]).map(section => ResumeSection.fromJson(section))
         );
+    }
+
+    toJson(): unknown {
+        return {
+            layout: this.layout,
+            sections: this.sections.map(section => section.toJson()),
+        };
     }
 
     static reducer(state: Resume, action: { type: string, payload: unknown }): Resume {
@@ -56,12 +63,23 @@ export class ResumeSection {
     data: Map<ItemName, ItemContent> = new Map();
     items: Map<ItemName, ItemContent>[] = [];
 
-    constructor() { 
+    constructor() {
         this.section_name = "";
         this.data_schema = "";
         this.layout_schema = "";
         this.data = new Map();
         this.items = [];
+    }
+
+    toJson(): unknown {
+        console.info(this);
+        return {
+            section_name: this.section_name,
+            data_schema: this.data_schema,
+            layout_schema: this.layout_schema,
+            data: Object.fromEntries(this.data),
+            items: this.items.map(item => Object.fromEntries(item)),
+        };
     }
 
 
@@ -85,6 +103,7 @@ export class ResumeSection {
         section.layout_schema = json.layout_schema as string;
 
         const data = new Map(Object.entries(json.data as { [key: string]: ItemContent }));
+        // @ts-ignore
         section.data = new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)] as [ItemName, ItemContent]));
 
         section.items = (json.items as { [key: ItemName]: ItemContent }[]).map(item => {
@@ -104,6 +123,7 @@ export type ItemContent =
     | { tag: "Url", value: { url: string, text: string } }
 
 export module ItemContent {
+    // @ts-ignore
     export function fromJson(json: unknown): ItemContent {
         if (typeof json === "undefined" || json === null) {
             return { tag: "None" };
@@ -112,26 +132,35 @@ export module ItemContent {
         if (typeof json === "string") {
             return { tag: "String", value: json };
         }
-        
+
         if (Array.isArray(json)) {
             return { tag: "List", value: json.map(fromJson) };
         }
-        
-        if (typeof json === "object") {
-            if (!("url" in json) || !("text" in json) || typeof json.url !== "string" || typeof json.text !== "string") {
-                throw new Error("Url must have a url and text");
+
+        if (typeof json === "object" && ("tag" in json) && ("value" in json)) {
+            switch (json.tag) {
+                case "None":
+                    return { tag: "None" };
+                case "String":
+                    return { tag: "String", value: json.value as string };
+                case "List":
+                    return { tag: "List", value: (json.value as ItemContent[]).map(fromJson) };
+                case "Url":
+                    return { tag: "Url", value: { url: (json.value as { url: string, text: string }).url, text: (json.value as { url: string, text: string }).text } };
             }
 
-            return { tag: "Url", value: { url: json.url, text: json.text } };
+        } else if (typeof json === "object" && ("url" in json) && ("text" in json)) {
+            return { tag: "Url", value: { url: json.url as string, text: json.text as string } };
         }
+
 
         throw new Error("ItemContent must be a string, an array, or an object");
     }
 
-    export function None() : ItemContent {
+    export function None(): ItemContent {
         return { tag: "None" };
     }
-    export function toString (item: ItemContent): string {
+    export function toString(item: ItemContent): string {
         if (item.tag === "None") {
             return "";
         } else if (item.tag === "String") {
