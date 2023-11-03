@@ -263,6 +263,9 @@ class SectionLayout {
                 if (elem.is_ref) {
                     throw new Error("Cannot compute textbox positions of uninstantiated layout");
                 }
+                if (elem.item === "") {
+                    return top_left.y;
+                }
                 const height = elem.font.get_height(font_dict);
                 const width = Width_1.Width.get_fixed_unchecked(elem.text_width);
                 switch (elem.alignment) {
