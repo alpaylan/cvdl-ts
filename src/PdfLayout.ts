@@ -81,6 +81,7 @@ export const render = async (
         console.log("Registering fonts...");
         for (const [font_name, font] of font_dict.fonts.entries()) {
             console.log(`Registering font ${font_name}`);
+            // @ts-ignore
             doc.registerFont(font_name, font.stream.buffer);
         }
     } catch (e) {

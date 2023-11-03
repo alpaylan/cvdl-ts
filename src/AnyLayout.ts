@@ -1,3 +1,4 @@
+/* eslint-disable */
 import { Box } from "./Box";
 import { DataSchema } from "./DataSchema";
 import { Elem } from "./Layout";
@@ -6,7 +7,7 @@ import { Resume } from "./Resume";
 import { vertical_margin, ResumeLayout } from "./ResumeLayout";
 import { Storage } from "./Storage";
 
-const fontkit = require("fontkit");
+import * as fontkit from 'fontkit';
 
 export class ElementBox {
     bounding_box: Box;
@@ -44,7 +45,6 @@ export type RenderProps = {
 }
 
 export class FontDict {
-    // @ts-ignore
     fonts: Map<string, fontkit.Font>;
 
     constructor() {
