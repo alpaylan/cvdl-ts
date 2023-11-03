@@ -2,7 +2,6 @@
 import { DataSchema } from "./DataSchema";
 import { Font } from "./Font";
 import { LayoutSchema } from "./LayoutSchema";
-import { Margin } from "./Margin";
 import { Resume } from "./Resume";
 import { ResumeLayout } from "./ResumeLayout";
 import { Storage } from "./Storage";
@@ -74,9 +73,6 @@ export class LocalStorage implements Storage {
     }
     load_layout_schema(schema_name: string): Promise<LayoutSchema> {
         const schema = JSON.parse(localStorage.getItem("section_layouts") || "[]").find((schema: any) => schema.schema_name === schema_name);
-        console.info(schema);
-        console.info(schema_name);
-        console.info(localStorage.getItem("section_layouts"));
         if (!schema) {
             throw new Error("Layout schema not found");
         }
