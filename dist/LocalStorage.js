@@ -69,9 +69,6 @@ class LocalStorage {
     }
     load_layout_schema(schema_name) {
         const schema = JSON.parse(localStorage.getItem("section_layouts") || "[]").find((schema) => schema.schema_name === schema_name);
-        console.info(schema);
-        console.info(schema_name);
-        console.info(localStorage.getItem("section_layouts"));
         if (!schema) {
             throw new Error("Layout schema not found");
         }
@@ -102,7 +99,19 @@ class LocalStorage {
         throw new Error("Method not implemented.");
     }
     save_layout_schema(layout_schema) {
-        throw new Error("Method not implemented.");
+        const schemasDirectMapped = JSON.parse(localStorage.getItem("section_layouts") || "[]");
+        const schemas = schemasDirectMapped.map((schema) => LayoutSchema_1.LayoutSchema.fromJson(schema));
+        const schema = schemas.find((schema) => schema.schema_name === layout_schema.schema_name);
+        if (!schema) {
+            schemas.push(layout_schema);
+        }
+        else {
+            schema.header_layout_schema = layout_schema.header_layout_schema;
+            schema.item_layout_schema = layout_schema.item_layout_schema;
+        }
+        console.error(schemas);
+        localStorage.setItem("section_layouts", JSON.stringify(schemas.map((schema) => schema.toJson())));
+        return Promise.resolve();
     }
     save_resume_layout(resume_layout) {
         throw new Error("Method not implemented.");

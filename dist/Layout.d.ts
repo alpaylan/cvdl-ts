@@ -14,10 +14,12 @@ export declare class SectionLayout {
     copy(): SectionLayout;
     static constrMap(tag: string): Stack | Row | Elem;
     static fromJson(json: any): SectionLayout;
+    toJson(): any;
     width(): Width;
     is_container(): boolean;
     is_ref(): boolean;
     type_(): "Stack" | "Row" | "Elem";
+    tag_(): "Stack" | "FlexRow" | "FrozenRow" | "Ref" | "Text";
     fonts(): Font[];
     with_margin(margin: Margin): SectionLayout;
     with_alignment(alignment: Alignment): SectionLayout;

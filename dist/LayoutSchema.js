@@ -17,5 +17,12 @@ class LayoutSchema {
             ...this.item_layout_schema.fonts(),
         ];
     }
+    toJson() {
+        return {
+            schema_name: this.schema_name,
+            header_layout_schema: this.header_layout_schema.toJson(),
+            item_layout_schema: this.item_layout_schema.toJson(),
+        };
+    }
 }
 exports.LayoutSchema = LayoutSchema;

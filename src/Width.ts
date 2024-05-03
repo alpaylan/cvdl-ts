@@ -87,6 +87,17 @@ export module Width {
             return default_();
         }
     }
+
+    export function toJson(self: Width): any {
+        switch (self.tag) {
+            case "Percent":
+                return self.value + "%";
+            case "Absolute":
+                return self.value + "px";
+            case "Fill":
+                return "Fill";
+        }
+    }
 }
 
 

@@ -67,7 +67,38 @@ export class SectionLayout {
             }
 
         }
-        throw new Error("Invalid layout");
+        throw new Error(`Invalid layout ${key}`);
+    }
+
+    toJson() {
+        switch (this.type_()) {
+            case "Stack":
+            case "Row": {
+                const container = this.inner as ContainerType;
+                return {
+                    [this.tag_()]: {
+                        elements: container.elements.map(e => e.toJson()),
+                        margin: container.margin.toJson(),
+                        alignment: container.alignment,
+                        width: Width.toJson(container.width),
+                    },
+                };
+            }
+            case "Elem": {
+                const elem = this.inner as Elem;
+                return {
+                    [this.tag_()]: {
+                        item: elem.item,
+                        margin: elem.margin.toJson(),
+                        alignment: elem.alignment,
+                        width: Width.toJson(elem.width),
+                        text_width: Width.toJson(elem.text_width),
+                        font: elem.font.toJson(),
+                        url: elem.url,
+                    },
+                };
+            }
+        }
     }
 
 
@@ -85,6 +116,17 @@ export class SectionLayout {
 
     type_(): "Stack" | "Row" | "Elem" {
         return this.inner.tag;
+    }
+
+    tag_(): "Stack" | "FlexRow" | "FrozenRow" | "Ref" | "Text" {
+        switch (this.type_()) {
+            case "Stack":
+                return "Stack";
+            case "Row":
+                return (this.inner as Row).is_frozen ? "FrozenRow" : "FlexRow";
+            case "Elem":
+                return this.is_ref() ? "Ref" : "Text";
+        }
     }
 
     fonts(): Font[] {

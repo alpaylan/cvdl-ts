@@ -76,4 +76,15 @@ var Width;
         }
     }
     Width.fromJson = fromJson;
+    function toJson(self) {
+        switch (self.tag) {
+            case "Percent":
+                return self.value + "%";
+            case "Absolute":
+                return self.value + "px";
+            case "Fill":
+                return "Fill";
+        }
+    }
+    Width.toJson = toJson;
 })(Width || (exports.Width = Width = {}));

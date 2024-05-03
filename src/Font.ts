@@ -36,6 +36,16 @@ export class Font {
         )
     }
 
+    toJson() : unknown {
+        return {
+            name: this.name,
+            size: this.size,
+            weight: this.weight,
+            style: this.style,
+            source: this.source
+        }
+    }
+
     static default_() : Font {
         return new Font("Arial", 12, "Medium", "Normal", "System");
     }

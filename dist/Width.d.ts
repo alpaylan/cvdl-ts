@@ -20,4 +20,5 @@ export declare namespace Width {
     function get_fixed_unchecked(self: Width): number;
     function scale(self: Width, scale: number): Width;
     function fromJson(json: any): Width;
+    function toJson(self: Width): any;
 }

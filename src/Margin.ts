@@ -24,5 +24,14 @@ export class Margin {
     static fromJson (json: any) : Margin {
         return new Margin(json.top, json.bottom, json.left, json.right);
     }
+
+    toJson() {
+        return {
+            top: this.top,
+            bottom: this.bottom,
+            left: this.left,
+            right: this.right,
+        };
+    }
 }
 

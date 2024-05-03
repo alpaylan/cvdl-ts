@@ -6,4 +6,9 @@ export declare class LayoutSchema {
     constructor(schema_name: string, header_layout_schema: SectionLayout, item_layout_schema: SectionLayout);
     static fromJson(json: any): LayoutSchema;
     fonts(): import("./Font").Font[];
+    toJson(): {
+        schema_name: string;
+        header_layout_schema: any;
+        item_layout_schema: any;
+    };
 }

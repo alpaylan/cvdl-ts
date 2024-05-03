@@ -102,7 +102,18 @@ export class LocalStorage implements Storage {
         throw new Error("Method not implemented.");
     }
     save_layout_schema(layout_schema: LayoutSchema): Promise<void> {
-        throw new Error("Method not implemented.");
+        const schemasDirectMapped = JSON.parse(localStorage.getItem("section_layouts") || "[]");
+        const schemas = schemasDirectMapped.map((schema: any) => LayoutSchema.fromJson(schema));
+        const schema = schemas.find((schema: LayoutSchema) => schema.schema_name === layout_schema.schema_name);
+        if (!schema) {
+            schemas.push(layout_schema);
+        } else {
+            schema.header_layout_schema = layout_schema.header_layout_schema;
+            schema.item_layout_schema = layout_schema.item_layout_schema;
+        }
+        console.error(schemas);
+        localStorage.setItem("section_layouts", JSON.stringify(schemas.map((schema: LayoutSchema) => schema.toJson())));
+        return Promise.resolve();
     }
     save_resume_layout(resume_layout: ResumeLayout): Promise<void> {
         throw new Error("Method not implemented.");

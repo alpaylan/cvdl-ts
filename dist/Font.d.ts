@@ -7,6 +7,7 @@ export declare class Font {
     source: FontSource;
     constructor(name: string, size: number, weight: FontWeight, style: FontStyle, source: FontSource);
     static fromJson(json: unknown): Font;
+    toJson(): unknown;
     static default_(): Font;
     full_name(): string;
     get_width(text: string, fonts: FontDict): number;

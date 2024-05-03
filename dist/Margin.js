@@ -22,5 +22,13 @@ class Margin {
     static fromJson(json) {
         return new Margin(json.top, json.bottom, json.left, json.right);
     }
+    toJson() {
+        return {
+            top: this.top,
+            bottom: this.bottom,
+            left: this.left,
+            right: this.right,
+        };
+    }
 }
 exports.Margin = Margin;
