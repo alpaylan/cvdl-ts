@@ -17,7 +17,7 @@ export declare class ResumeSection {
     data_schema: string;
     layout_schema: string;
     data: Map<ItemName, ItemContent>;
-    items: Map<ItemName, ItemContent>[];
+    items: Item[];
     constructor();
     toJson(): unknown;
     static fromJson(json: unknown): ResumeSection;
@@ -38,6 +38,14 @@ export type ItemContent = {
         text: string;
     };
 };
+export type Item = {
+    id: string;
+    fields: Map<ItemName, ItemContent>;
+};
+export declare namespace Item {
+    function fromJson(json: unknown): Item;
+    function toJson(item: Item): unknown;
+}
 export declare namespace ItemContent {
     function fromJson(json: unknown): ItemContent;
     function None(): ItemContent;

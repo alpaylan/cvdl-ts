@@ -21,7 +21,7 @@ export class Font {
             return Font.default_();
         }
 
-        const name = ("name" in json) ? json.name as string : "Arial";
+        const name = ("name" in json) ? json.name as string : "Exo";
         const size = ("size" in json) ? json.size as number : 12;
         const weight = ("weight" in json) ? json.weight as FontWeight : "Medium";
         const style = ("style" in json) ? json.style as FontStyle : "Normal";
@@ -47,7 +47,7 @@ export class Font {
     }
 
     static default_() : Font {
-        return new Font("Arial", 12, "Medium", "Normal", "System");
+        return new Font("Exo", 12, "Medium", "Normal", "System");
     }
     
     full_name() : string {

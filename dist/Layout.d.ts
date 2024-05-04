@@ -13,6 +13,7 @@ export declare class SectionLayout {
     constructor(inner: Stack | Row | Elem);
     copy(): SectionLayout;
     static constrMap(tag: string): Stack | Row | Elem;
+    static empty(): SectionLayout;
     static fromJson(json: any): SectionLayout;
     toJson(): any;
     width(): Width;

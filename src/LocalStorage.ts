@@ -4,13 +4,13 @@ import { Font } from "./Font";
 import { LayoutSchema } from "./LayoutSchema";
 import { Resume } from "./Resume";
 import { ResumeLayout } from "./ResumeLayout";
-import { Storage } from "./Storage";
-export class LocalStorage implements Storage {
+// import { Storage } from "./Storage";
+export class LocalStorage {
     async initiate_storage(): Promise<void> {
         if (!localStorage.getItem("resumes")) {
-            fetch("https://d2bnplhbawocbk.cloudfront.net/data/resumes/resume2.json").then((response) => {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/resumes/resume5.json").then((response) => {
                 response.json().then((resume) => {
-                    localStorage.setItem("resumes", JSON.stringify([{ name: "resume2", data: resume }]));
+                    localStorage.setItem("resumes", JSON.stringify([{ name: "resume5", data: resume }]));
                 });
             });
         }
@@ -24,7 +24,7 @@ export class LocalStorage implements Storage {
         }
 
         if (!localStorage.getItem("section_layouts")) {
-            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas.json").then((response) => {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas2.json").then((response) => {
                 response.json().then((section_layouts) => {
                     localStorage.setItem("section_layouts", JSON.stringify(section_layouts));
                 });
@@ -40,54 +40,55 @@ export class LocalStorage implements Storage {
         }
 
     }
-    list_resumes(): Promise<string[]> {
+    list_resumes(): string[] {
         const resumes = JSON.parse(localStorage.getItem("resumes") || "[]").map((resume: any) => resume.name);
-        return Promise.resolve(resumes);
+        return resumes
     }
-    list_data_schemas(): Promise<string[]> {
+    list_data_schemas(): string[] {
         const schemas = JSON.parse(localStorage.getItem("data_schemas") || "[]").map((schema: any) => schema.schema_name);
-        return Promise.resolve(schemas);
+        return schemas;
     }
-    list_layout_schemas(): Promise<string[]> {
+    list_layout_schemas(): string[] {
         const schemas = JSON.parse(localStorage.getItem("section_layouts") || "[]").map((schema: any) => schema.schema_name);
-        return Promise.resolve(schemas);
+        return schemas;
     }
-    list_resume_layouts(): Promise<string[]> {
+    list_resume_layouts(): string[] {
         const schemas = JSON.parse(localStorage.getItem("resume_layouts") || "[]").map((schema: any) => schema.schema_name);
-        return Promise.resolve(schemas);
+        return schemas;
     }
-    load_resume(resume_name: string): Promise<Resume> {
+    load_resume(resume_name: string): Resume {
         console.log(resume_name);
         const resume = JSON.parse(localStorage.getItem("resumes") || "[]").find((resume: any) => resume.name === resume_name);
         if (!resume) {
             throw new Error("Resume not found");
         }
-        return Promise.resolve(Resume.fromJson(resume.data));
+        return Resume.fromJson(resume.data);
     }
-    load_data_schema(schema_name: string): Promise<DataSchema> {
+    load_data_schema(schema_name: string): DataSchema {
+        console.error(schema_name);
         const schema = JSON.parse(localStorage.getItem("data_schemas") || "[]").find((schema: any) => schema.schema_name === schema_name);
         if (!schema) {
             throw new Error("Data schema not found");
         }
-        return Promise.resolve(DataSchema.fromJson(schema));
+        return DataSchema.fromJson(schema);
     }
-    load_layout_schema(schema_name: string): Promise<LayoutSchema> {
+    load_layout_schema(schema_name: string): LayoutSchema {
         const schema = JSON.parse(localStorage.getItem("section_layouts") || "[]").find((schema: any) => schema.schema_name === schema_name);
         if (!schema) {
             throw new Error("Layout schema not found");
         }
-        return Promise.resolve(LayoutSchema.fromJson(schema));
+        return LayoutSchema.fromJson(schema);
     }
-    load_resume_layout(schema_name: string): Promise<ResumeLayout> {
+    load_resume_layout(schema_name: string): ResumeLayout {
         console.log(schema_name);
         const schema = JSON.parse(localStorage.getItem("resume_layouts") || "[]").find((schema: any) => schema.schema_name === schema_name);
         if (!schema) {
             throw new Error("Resume layout not found");
         }
         console.info(schema);
-        return Promise.resolve(ResumeLayout.fromJson(schema));
+        return ResumeLayout.fromJson(schema);
     }
-    save_resume(resume_name: string, resume_data: Resume): Promise<void> {
+    save_resume(resume_name: string, resume_data: Resume): void {
         const resumes = JSON.parse(localStorage.getItem("resumes") || "[]");
         const resume = resumes.find((resume: any) => resume.name === resume_name);
         if (!resume) {
@@ -96,12 +97,11 @@ export class LocalStorage implements Storage {
             resume.data = resume_data.toJson();
         }
         localStorage.setItem("resumes", JSON.stringify(resumes));
-        return Promise.resolve();
     }
     save_data_schema(data_schema: DataSchema): Promise<void> {
         throw new Error("Method not implemented.");
     }
-    save_layout_schema(layout_schema: LayoutSchema): Promise<void> {
+    save_layout_schema(layout_schema: LayoutSchema): void {
         const schemasDirectMapped = JSON.parse(localStorage.getItem("section_layouts") || "[]");
         const schemas = schemasDirectMapped.map((schema: any) => LayoutSchema.fromJson(schema));
         const schema = schemas.find((schema: LayoutSchema) => schema.schema_name === layout_schema.schema_name);
@@ -113,12 +113,12 @@ export class LocalStorage implements Storage {
         }
         console.error(schemas);
         localStorage.setItem("section_layouts", JSON.stringify(schemas.map((schema: LayoutSchema) => schema.toJson())));
-        return Promise.resolve();
     }
-    save_resume_layout(resume_layout: ResumeLayout): Promise<void> {
+    save_resume_layout(resume_layout: ResumeLayout): void {
         throw new Error("Method not implemented.");
     }
     async load_font(font: Font): Promise<Buffer> {
+        console.error(font);
         const path = `fonts/${font.full_name()}.ttf`;
         if (!localStorage.getItem(path)) {
             const response = await fetch(`https://d2bnplhbawocbk.cloudfront.net/data/${path}`);

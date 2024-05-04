@@ -13,7 +13,7 @@ class Font {
         if (typeof json !== "object" || json === null) {
             return Font.default_();
         }
-        const name = ("name" in json) ? json.name : "Arial";
+        const name = ("name" in json) ? json.name : "Exo";
         const size = ("size" in json) ? json.size : 12;
         const weight = ("weight" in json) ? json.weight : "Medium";
         const style = ("style" in json) ? json.style : "Normal";
@@ -30,7 +30,7 @@ class Font {
         };
     }
     static default_() {
-        return new Font("Arial", 12, "Medium", "Normal", "System");
+        return new Font("Exo", 12, "Medium", "Normal", "System");
     }
     full_name() {
         return this.name + "-" + this.weight + (this.style === "Italic" ? "Italic" : "");

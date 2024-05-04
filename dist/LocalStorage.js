@@ -5,12 +5,13 @@ const DataSchema_1 = require("./DataSchema");
 const LayoutSchema_1 = require("./LayoutSchema");
 const Resume_1 = require("./Resume");
 const ResumeLayout_1 = require("./ResumeLayout");
+// import { Storage } from "./Storage";
 class LocalStorage {
     async initiate_storage() {
         if (!localStorage.getItem("resumes")) {
-            fetch("https://d2bnplhbawocbk.cloudfront.net/data/resumes/resume2.json").then((response) => {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/resumes/resume5.json").then((response) => {
                 response.json().then((resume) => {
-                    localStorage.setItem("resumes", JSON.stringify([{ name: "resume2", data: resume }]));
+                    localStorage.setItem("resumes", JSON.stringify([{ name: "resume5", data: resume }]));
                 });
             });
         }
@@ -22,7 +23,7 @@ class LocalStorage {
             });
         }
         if (!localStorage.getItem("section_layouts")) {
-            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas.json").then((response) => {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas2.json").then((response) => {
                 response.json().then((section_layouts) => {
                     localStorage.setItem("section_layouts", JSON.stringify(section_layouts));
                 });
@@ -38,19 +39,19 @@ class LocalStorage {
     }
     list_resumes() {
         const resumes = JSON.parse(localStorage.getItem("resumes") || "[]").map((resume) => resume.name);
-        return Promise.resolve(resumes);
+        return resumes;
     }
     list_data_schemas() {
         const schemas = JSON.parse(localStorage.getItem("data_schemas") || "[]").map((schema) => schema.schema_name);
-        return Promise.resolve(schemas);
+        return schemas;
     }
     list_layout_schemas() {
         const schemas = JSON.parse(localStorage.getItem("section_layouts") || "[]").map((schema) => schema.schema_name);
-        return Promise.resolve(schemas);
+        return schemas;
     }
     list_resume_layouts() {
         const schemas = JSON.parse(localStorage.getItem("resume_layouts") || "[]").map((schema) => schema.schema_name);
-        return Promise.resolve(schemas);
+        return schemas;
     }
     load_resume(resume_name) {
         console.log(resume_name);
@@ -58,21 +59,22 @@ class LocalStorage {
         if (!resume) {
             throw new Error("Resume not found");
         }
-        return Promise.resolve(Resume_1.Resume.fromJson(resume.data));
+        return Resume_1.Resume.fromJson(resume.data);
     }
     load_data_schema(schema_name) {
+        console.error(schema_name);
         const schema = JSON.parse(localStorage.getItem("data_schemas") || "[]").find((schema) => schema.schema_name === schema_name);
         if (!schema) {
             throw new Error("Data schema not found");
         }
-        return Promise.resolve(DataSchema_1.DataSchema.fromJson(schema));
+        return DataSchema_1.DataSchema.fromJson(schema);
     }
     load_layout_schema(schema_name) {
         const schema = JSON.parse(localStorage.getItem("section_layouts") || "[]").find((schema) => schema.schema_name === schema_name);
         if (!schema) {
             throw new Error("Layout schema not found");
         }
-        return Promise.resolve(LayoutSchema_1.LayoutSchema.fromJson(schema));
+        return LayoutSchema_1.LayoutSchema.fromJson(schema);
     }
     load_resume_layout(schema_name) {
         console.log(schema_name);
@@ -81,7 +83,7 @@ class LocalStorage {
             throw new Error("Resume layout not found");
         }
         console.info(schema);
-        return Promise.resolve(ResumeLayout_1.ResumeLayout.fromJson(schema));
+        return ResumeLayout_1.ResumeLayout.fromJson(schema);
     }
     save_resume(resume_name, resume_data) {
         const resumes = JSON.parse(localStorage.getItem("resumes") || "[]");
@@ -93,7 +95,6 @@ class LocalStorage {
             resume.data = resume_data.toJson();
         }
         localStorage.setItem("resumes", JSON.stringify(resumes));
-        return Promise.resolve();
     }
     save_data_schema(data_schema) {
         throw new Error("Method not implemented.");
@@ -111,12 +112,12 @@ class LocalStorage {
         }
         console.error(schemas);
         localStorage.setItem("section_layouts", JSON.stringify(schemas.map((schema) => schema.toJson())));
-        return Promise.resolve();
     }
     save_resume_layout(resume_layout) {
         throw new Error("Method not implemented.");
     }
     async load_font(font) {
+        console.error(font);
         const path = `fonts/${font.full_name()}.ttf`;
         if (!localStorage.getItem(path)) {
             const response = await fetch(`https://d2bnplhbawocbk.cloudfront.net/data/${path}`);

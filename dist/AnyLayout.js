@@ -60,7 +60,7 @@ class FontDict {
             }
             console.log(`Source ${font.source}`);
             const font_data = await storage.load_font(font);
-            console.log(font_data);
+            console.error(font_data);
             const fontkit_font = fontkit.create(font_data);
             this.fonts.set(font.full_name(), fontkit_font);
         }
@@ -99,6 +99,7 @@ async function render({ resume, layout_schemas, data_schemas, resume_layout, sto
         console.info(`Font loading time: ${end_time - start_time}ms for section ${section.section_name}`);
         // 2. Find the data schema for the section
         const _data_schema = data_schemas.find(s => s.schema_name === section.data_schema);
+        console.error(data_schemas);
         if (_data_schema === undefined) {
             throw new Error(`Could not find data schema ${section.data_schema}`);
         }
@@ -135,7 +136,7 @@ async function render({ resume, layout_schemas, data_schemas, resume_layout, sto
             const result = layout_schema
                 .item_layout_schema
                 .copy()
-                .instantiate(item)
+                .instantiate(item.fields)
                 .normalize(column_width, font_dict)
                 .compute_boxes(font_dict);
             boxes.push(result);

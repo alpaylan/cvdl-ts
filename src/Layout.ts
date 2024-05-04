@@ -41,6 +41,11 @@ export class SectionLayout {
         }
     }
 
+    static empty(): SectionLayout {
+        return new SectionLayout(Stack.default_());
+    }
+    
+
     static fromJson(json: any): SectionLayout {
         const key = Object.keys(json)[0];
         switch (key) {

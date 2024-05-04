@@ -44,6 +44,8 @@ export class Resume {
         }
     }
     data_schemas(): string[] {
+        console.error(this.sections);
+        console.error(this.sections.map(section => section.data_schema));
         return this.sections.map(section => section.data_schema);
     }
 
@@ -61,7 +63,7 @@ export class ResumeSection {
     data_schema: string = "";
     layout_schema: string = "";
     data: Map<ItemName, ItemContent> = new Map();
-    items: Map<ItemName, ItemContent>[] = [];
+    items: Item[] = [];
 
     constructor() {
         this.section_name = "";
@@ -78,7 +80,7 @@ export class ResumeSection {
             data_schema: this.data_schema,
             layout_schema: this.layout_schema,
             data: Object.fromEntries(this.data),
-            items: this.items.map(item => Object.fromEntries(item)),
+            items: this.items.map(item => Item.toJson(item)),
         };
     }
 
@@ -106,9 +108,12 @@ export class ResumeSection {
         // @ts-ignore
         section.data = new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)] as [ItemName, ItemContent]));
 
-        section.items = (json.items as { [key: ItemName]: ItemContent }[]).map(item => {
-            const data = new Map(Object.entries(item));
-            return new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)] as [ItemName, ItemContent]));
+        section.items = (json.items as Item[]).map(item => {
+            const data = new Map(Object.entries(item.fields));
+            return {
+                id: item.id,
+                fields: new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)] as [ItemName, ItemContent]))
+            };
         });
         return section;
     }
@@ -121,6 +126,41 @@ export type ItemContent =
     | { tag: "String", value: string }
     | { tag: "List", value: ItemContent[] }
     | { tag: "Url", value: { url: string, text: string } }
+
+export type Item = {
+    id: string,
+    fields: Map<ItemName, ItemContent>
+}
+
+export module Item {
+    export function fromJson(json: unknown): Item {
+        if (typeof json !== "object") {
+            throw new Error("Item must be an object");
+        }
+
+        if (json === null) {
+            throw new Error("Item must not be null");
+        }
+
+        if (!("id" in json) || !("fields" in json)) {
+            throw new Error("Item must have an id and fields");
+        }
+
+        const item = {
+            id: json.id as string,
+            fields: new Map(Object.entries(json.fields as { [key: string]: ItemContent }))
+        };
+        return item;
+    }
+
+    export function toJson(item: Item): unknown {
+        return {
+            id: item.id,
+            fields: Object.fromEntries(item.fields)
+        };
+    }
+}
+
 
 export module ItemContent {
     // @ts-ignore
@@ -137,10 +177,12 @@ export module ItemContent {
             return { tag: "List", value: json.map(fromJson) };
         }
 
+        if (typeof json === "object" && ("tag" in json) && json.tag === "None") {
+            return { tag: "None" };
+        } 
+
         if (typeof json === "object" && ("tag" in json) && ("value" in json)) {
             switch (json.tag) {
-                case "None":
-                    return { tag: "None" };
                 case "String":
                     return { tag: "String", value: json.value as string };
                 case "List":
@@ -154,7 +196,7 @@ export module ItemContent {
         }
 
 
-        throw new Error("ItemContent must be a string, an array, or an object");
+        throw new Error(`Invalid ItemContent(${JSON.stringify(json)}): ItemContent must be a string, an array, or an object`);
     }
 
     export function None(): ItemContent {

@@ -1,7 +1,7 @@
 "use strict";
 /* eslint-disable @typescript-eslint/no-namespace */
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.ItemContent = exports.ResumeSection = exports.Resume = void 0;
+exports.ItemContent = exports.Item = exports.ResumeSection = exports.Resume = void 0;
 class Resume {
     constructor(layout, sections) {
         this.layout = layout;
@@ -35,6 +35,8 @@ class Resume {
         }
     }
     data_schemas() {
+        console.error(this.sections);
+        console.error(this.sections.map(section => section.data_schema));
         return this.sections.map(section => section.data_schema);
     }
     layout_schemas() {
@@ -65,7 +67,7 @@ class ResumeSection {
             data_schema: this.data_schema,
             layout_schema: this.layout_schema,
             data: Object.fromEntries(this.data),
-            items: this.items.map(item => Object.fromEntries(item)),
+            items: this.items.map(item => Item.toJson(item)),
         };
     }
     static fromJson(json) {
@@ -86,13 +88,43 @@ class ResumeSection {
         // @ts-ignore
         section.data = new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)]));
         section.items = json.items.map(item => {
-            const data = new Map(Object.entries(item));
-            return new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)]));
+            const data = new Map(Object.entries(item.fields));
+            return {
+                id: item.id,
+                fields: new Map([...data].map(([key, value]) => [key, ItemContent.fromJson(value)]))
+            };
         });
         return section;
     }
 }
 exports.ResumeSection = ResumeSection;
+var Item;
+(function (Item) {
+    function fromJson(json) {
+        if (typeof json !== "object") {
+            throw new Error("Item must be an object");
+        }
+        if (json === null) {
+            throw new Error("Item must not be null");
+        }
+        if (!("id" in json) || !("fields" in json)) {
+            throw new Error("Item must have an id and fields");
+        }
+        const item = {
+            id: json.id,
+            fields: new Map(Object.entries(json.fields))
+        };
+        return item;
+    }
+    Item.fromJson = fromJson;
+    function toJson(item) {
+        return {
+            id: item.id,
+            fields: Object.fromEntries(item.fields)
+        };
+    }
+    Item.toJson = toJson;
+})(Item || (exports.Item = Item = {}));
 var ItemContent;
 (function (ItemContent) {
     // @ts-ignore
@@ -106,10 +138,11 @@ var ItemContent;
         if (Array.isArray(json)) {
             return { tag: "List", value: json.map(fromJson) };
         }
+        if (typeof json === "object" && ("tag" in json) && json.tag === "None") {
+            return { tag: "None" };
+        }
         if (typeof json === "object" && ("tag" in json) && ("value" in json)) {
             switch (json.tag) {
-                case "None":
-                    return { tag: "None" };
                 case "String":
                     return { tag: "String", value: json.value };
                 case "List":
@@ -121,7 +154,7 @@ var ItemContent;
         else if (typeof json === "object" && ("url" in json) && ("text" in json)) {
             return { tag: "Url", value: { url: json.url, text: json.text } };
         }
-        throw new Error("ItemContent must be a string, an array, or an object");
+        throw new Error(`Invalid ItemContent(${JSON.stringify(json)}): ItemContent must be a string, an array, or an object`);
     }
     ItemContent.fromJson = fromJson;
     function None() {
