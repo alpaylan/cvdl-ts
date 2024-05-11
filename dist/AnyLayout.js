@@ -30,6 +30,7 @@ class ElementBox {
     constructor(bounding_box, elements) {
         this.bounding_box = bounding_box;
         this.elements = elements;
+        this.path = { tag: 'none' };
     }
     move_y_by(y) {
         this.bounding_box = this.bounding_box.move_y_by(y);
@@ -58,9 +59,7 @@ class FontDict {
                 console.log(`Font ${font.full_name()} is already loaded`);
                 continue;
             }
-            console.log(`Source ${font.source}`);
             const font_data = await storage.load_font(font);
-            console.error(font_data);
             const fontkit_font = fontkit.create(font_data);
             this.fonts.set(font.full_name(), fontkit_font);
         }
@@ -99,7 +98,6 @@ async function render({ resume, layout_schemas, data_schemas, resume_layout, sto
         console.info(`Font loading time: ${end_time - start_time}ms for section ${section.section_name}`);
         // 2. Find the data schema for the section
         const _data_schema = data_schemas.find(s => s.schema_name === section.data_schema);
-        console.error(data_schemas);
         if (_data_schema === undefined) {
             throw new Error(`Could not find data schema ${section.data_schema}`);
         }
@@ -113,12 +111,16 @@ async function render({ resume, layout_schemas, data_schemas, resume_layout, sto
             .compute_boxes(font_dict);
         end_time = Date.now();
         console.info(`Header rendering time: ${end_time - start_time}ms for section ${section.section_name}`);
+        result.path = {
+            tag: 'section',
+            section: section.section_name
+        };
         boxes.push(result);
         start_time = Date.now();
         // Render Section Items
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         // @ts-nocheck
-        for (const [_, item] of section.items.entries()) {
+        for (const [index, item] of section.items.entries()) {
             console.log("Computing item");
             // 1. Find the layout schema for the section
             const layout_schema = layout_schemas
@@ -139,6 +141,11 @@ async function render({ resume, layout_schemas, data_schemas, resume_layout, sto
                 .instantiate(item.fields)
                 .normalize(column_width, font_dict)
                 .compute_boxes(font_dict);
+            result.path = {
+                tag: 'item',
+                section: section.section_name,
+                item: index
+            };
             boxes.push(result);
         }
         end_time = Date.now();

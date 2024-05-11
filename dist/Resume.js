@@ -35,8 +35,6 @@ class Resume {
         }
     }
     data_schemas() {
-        console.error(this.sections);
-        console.error(this.sections.map(section => section.data_schema));
         return this.sections.map(section => section.data_schema);
     }
     layout_schemas() {

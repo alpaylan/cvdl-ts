@@ -3,19 +3,38 @@ import { Box } from "./Box";
 import { DataSchema } from "./DataSchema";
 import { Elem } from "./Layout";
 import { LayoutSchema } from "./LayoutSchema";
+import { LocalStorage } from "./LocalStorage";
 import { Resume } from "./Resume";
 import { vertical_margin, ResumeLayout } from "./ResumeLayout";
 import { Storage } from "./Storage";
 
 import * as fontkit from 'fontkit';
 
+export type ElementPath = {
+    tag: 'none',
+} | {
+    tag: 'section',
+    section: string
+} | {
+    tag: 'item',
+    section: string,
+    item: number
+} | {
+    tag: 'field',
+    section: string,
+    item: number,
+    field: string,
+}
+
 export class ElementBox {
     bounding_box: Box;
     elements: [Box, Elem][];
+    path?: ElementPath;
 
     constructor(bounding_box: Box, elements: [Box, Elem][]) {
         this.bounding_box = bounding_box;
         this.elements = elements;
+        this.path = { tag: 'none' };
     }
 
     move_y_by(y: number): ElementBox {
@@ -40,7 +59,7 @@ export type RenderProps = {
     layout_schemas: LayoutSchema[],
     data_schemas: DataSchema[],
     resume_layout: ResumeLayout,
-    storage: Storage,
+    storage: LocalStorage,
     fontDict?: FontDict
 }
 
@@ -52,16 +71,14 @@ export class FontDict {
     }
 
     
-    async load_fonts_from_schema(schema: LayoutSchema, storage: Storage) {
+    async load_fonts_from_schema(schema: LayoutSchema, storage: LocalStorage) {
         for (const font of schema.fonts()) {
             console.log(`Loading font ${font.full_name()}`);
             if (this.fonts.has(font.full_name())) {
                 console.log(`Font ${font.full_name()} is already loaded`);
                 continue;
             }
-            console.log(`Source ${font.source}`);
             const font_data = await storage.load_font(font);
-            console.error(font_data)
             const fontkit_font = fontkit.create(font_data);
             this.fonts.set(font.full_name(), fontkit_font);
         }
@@ -107,7 +124,6 @@ export async function render({ resume, layout_schemas, data_schemas, resume_layo
         // 2. Find the data schema for the section
         const _data_schema = data_schemas.find(s => s.schema_name === section.data_schema);
 
-        console.error(data_schemas)
         if (_data_schema === undefined) {
             throw new Error(`Could not find data schema ${section.data_schema}`);
         }
@@ -122,13 +138,17 @@ export async function render({ resume, layout_schemas, data_schemas, resume_layo
             .compute_boxes(font_dict);
         end_time = Date.now();
         console.info(`Header rendering time: ${end_time - start_time}ms for section ${section.section_name}`);
+        result.path = {
+            tag: 'section',
+            section: section.section_name
+        }
         boxes.push(result);
 
         start_time = Date.now();
         // Render Section Items
         // eslint-disable-next-line @typescript-eslint/no-unused-vars
         // @ts-nocheck
-        for (const [_, item] of section.items.entries()) {
+        for (const [index, item] of section.items.entries()) {
             console.log("Computing item");
             // 1. Find the layout schema for the section
             const layout_schema = layout_schemas
@@ -150,6 +170,11 @@ export async function render({ resume, layout_schemas, data_schemas, resume_layo
                 .instantiate(item.fields)
                 .normalize(column_width, font_dict)
                 .compute_boxes(font_dict);
+            result.path = {
+                tag: 'item',
+                section: section.section_name,
+                item: index
+            };
             boxes.push(result);
         }
         end_time = Date.now();

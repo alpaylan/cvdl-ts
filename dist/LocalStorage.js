@@ -23,7 +23,7 @@ class LocalStorage {
             });
         }
         if (!localStorage.getItem("section_layouts")) {
-            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas2.json").then((response) => {
+            fetch("https://d2bnplhbawocbk.cloudfront.net/data/layout-schemas3.json").then((response) => {
                 response.json().then((section_layouts) => {
                     localStorage.setItem("section_layouts", JSON.stringify(section_layouts));
                 });
@@ -54,25 +54,23 @@ class LocalStorage {
         return schemas;
     }
     load_resume(resume_name) {
-        console.log(resume_name);
         const resume = JSON.parse(localStorage.getItem("resumes") || "[]").find((resume) => resume.name === resume_name);
         if (!resume) {
-            throw new Error("Resume not found");
+            throw new Error(`Resume(${resume_name}) not found`);
         }
         return Resume_1.Resume.fromJson(resume.data);
     }
     load_data_schema(schema_name) {
-        console.error(schema_name);
         const schema = JSON.parse(localStorage.getItem("data_schemas") || "[]").find((schema) => schema.schema_name === schema_name);
         if (!schema) {
-            throw new Error("Data schema not found");
+            throw new Error(`Data Schema(${schema_name}) not found`);
         }
         return DataSchema_1.DataSchema.fromJson(schema);
     }
     load_layout_schema(schema_name) {
         const schema = JSON.parse(localStorage.getItem("section_layouts") || "[]").find((schema) => schema.schema_name === schema_name);
         if (!schema) {
-            throw new Error("Layout schema not found");
+            throw new Error(`Layout Schema(${schema_name}) not found`);
         }
         return LayoutSchema_1.LayoutSchema.fromJson(schema);
     }
@@ -80,7 +78,7 @@ class LocalStorage {
         console.log(schema_name);
         const schema = JSON.parse(localStorage.getItem("resume_layouts") || "[]").find((schema) => schema.schema_name === schema_name);
         if (!schema) {
-            throw new Error("Resume layout not found");
+            throw new Error(`Resume Layout(${schema_name}) not found`);
         }
         console.info(schema);
         return ResumeLayout_1.ResumeLayout.fromJson(schema);
@@ -110,14 +108,12 @@ class LocalStorage {
             schema.header_layout_schema = layout_schema.header_layout_schema;
             schema.item_layout_schema = layout_schema.item_layout_schema;
         }
-        console.error(schemas);
         localStorage.setItem("section_layouts", JSON.stringify(schemas.map((schema) => schema.toJson())));
     }
     save_resume_layout(resume_layout) {
         throw new Error("Method not implemented.");
     }
     async load_font(font) {
-        console.error(font);
         const path = `fonts/${font.full_name()}.ttf`;
         if (!localStorage.getItem(path)) {
             const response = await fetch(`https://d2bnplhbawocbk.cloudfront.net/data/${path}`);

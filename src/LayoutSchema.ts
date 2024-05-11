@@ -23,7 +23,6 @@ export class LayoutSchema {
     }
 
     static fromJson(json: any): LayoutSchema {
-        console.error(json);
         return new LayoutSchema(
             json.schema_name,
             json.data_schema_name,

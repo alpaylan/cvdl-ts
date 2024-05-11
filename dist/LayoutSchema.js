@@ -13,7 +13,6 @@ class LayoutSchema {
         return new LayoutSchema(schema_name, data_schema_name, Layout_1.SectionLayout.empty(), Layout_1.SectionLayout.empty());
     }
     static fromJson(json) {
-        console.error(json);
         return new LayoutSchema(json.schema_name, json.data_schema_name, Layout_1.SectionLayout.fromJson(json.header_layout_schema), Layout_1.SectionLayout.fromJson(json.item_layout_schema));
     }
     fonts() {

@@ -44,8 +44,6 @@ export class Resume {
         }
     }
     data_schemas(): string[] {
-        console.error(this.sections);
-        console.error(this.sections.map(section => section.data_schema));
         return this.sections.map(section => section.data_schema);
     }
 

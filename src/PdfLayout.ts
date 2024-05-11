@@ -1,11 +1,11 @@
 import blobStream from "blob-stream";
 import { ElementBox, FontDict, render as anyRender } from "./AnyLayout";
-import { Storage } from "./Storage";
 import PdfDocument from 'pdfkit';
 import { Resume } from "./Resume";
 import { DataSchema } from "./DataSchema";
 import { LayoutSchema } from "./LayoutSchema";
 import { ResumeLayout } from "./ResumeLayout";
+import { LocalStorage } from "./LocalStorage";
 
 export type RenderResult = {
     blob: Blob,
@@ -19,7 +19,7 @@ export type RenderProps = {
     data_schemas?: DataSchema[],
     layout_schemas?: LayoutSchema[],
     resume_layout?: ResumeLayout,
-    storage: Storage,
+    storage: LocalStorage,
     fontDict?: FontDict,
     debug: boolean,
 }
