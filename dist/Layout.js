@@ -333,15 +333,18 @@ class Stack {
     constructor(elements, margin, alignment, width) {
         this.tag = "Stack";
         this.elements = elements;
-        this.margin = margin;
-        this.alignment = alignment;
-        this.width = width;
+        this.margin = margin !== null && margin !== void 0 ? margin : Margin_1.Margin.default_();
+        this.alignment = alignment !== null && alignment !== void 0 ? alignment : Alignment_1.Alignment.default_();
+        this.width = width !== null && width !== void 0 ? width : Width_1.Width.default_();
+    }
+    static stack(elements, margin, alignment, width) {
+        return new SectionLayout(new Stack(elements, margin, alignment, width));
     }
     copy() {
         return new Stack(this.elements.map((e) => e.copy()), this.margin.copy(), this.alignment, Width_1.Width.copy(this.width));
     }
     static default_() {
-        return new Stack([], Margin_1.Margin.default_(), Alignment_1.Alignment.default_(), Width_1.Width.default_());
+        return new Stack([]);
     }
     instantiate(section) {
         return new Stack(this.elements.map(e => e.instantiate(section)), this.margin, this.alignment, this.width);
@@ -376,16 +379,19 @@ class Row {
     constructor(elements, is_frozen, margin, alignment, width) {
         this.tag = "Row";
         this.elements = elements;
-        this.is_frozen = is_frozen;
-        this.margin = margin;
-        this.alignment = alignment;
-        this.width = width;
+        this.is_frozen = is_frozen !== null && is_frozen !== void 0 ? is_frozen : false;
+        this.margin = margin !== null && margin !== void 0 ? margin : Margin_1.Margin.default_();
+        this.alignment = alignment !== null && alignment !== void 0 ? alignment : Alignment_1.Alignment.default_();
+        this.width = width !== null && width !== void 0 ? width : Width_1.Width.default_();
+    }
+    static row(elements, is_frozen, margin, alignment, width) {
+        return new SectionLayout(new Row(elements, is_frozen, margin, alignment, width));
     }
     copy() {
         return new Row(this.elements.map((e) => e.copy()), this.is_frozen, this.margin.copy(), this.alignment, Width_1.Width.copy(this.width));
     }
     static default_() {
-        return new Row([], false, Margin_1.Margin.default_(), Alignment_1.Alignment.default_(), Width_1.Width.default_());
+        return new Row([]);
     }
     instantiate(section) {
         return new Row(this.elements.map(e => e.instantiate(section)), this.is_frozen, this.margin, this.alignment, this.width);
@@ -454,6 +460,9 @@ class Elem {
         this.alignment = alignment;
         this.width = width;
     }
+    static elem(item, url, is_ref, is_fill, text_width, font, margin, alignment, width) {
+        return new SectionLayout(new Elem(item, url, is_ref, is_fill, text_width, font, margin, alignment, width));
+    }
     copy() {
         return new Elem(this.item, this.url, this.is_ref, this.is_fill, Width_1.Width.copy(this.text_width), this.font, this.margin.copy(), this.alignment, Width_1.Width.copy(this.width));
     }
@@ -462,6 +471,12 @@ class Elem {
     }
     with_item(item) {
         return new Elem(item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+    }
+    as_ref() {
+        return new Elem(this.item, this.url, true, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+    }
+    with_font(font) {
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, font, this.margin, this.alignment, this.width);
     }
     with_url(url) {
         return new Elem(this.item, url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);

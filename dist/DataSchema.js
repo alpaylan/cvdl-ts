@@ -16,5 +16,12 @@ class DataSchema {
         }
         return new DataSchema(json.schema_name, json.header_schema, json.item_schema);
     }
+    toJson() {
+        return {
+            schema_name: this.schema_name,
+            header_schema: this.header_schema,
+            item_schema: this.item_schema,
+        };
+    }
 }
 exports.DataSchema = DataSchema;

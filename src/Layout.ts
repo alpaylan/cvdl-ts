@@ -18,7 +18,7 @@ export class SectionLayout {
         this.inner = inner;
     }
 
-    copy() : SectionLayout {
+    copy(): SectionLayout {
         return new SectionLayout(this.inner.copy());
     }
 
@@ -44,7 +44,7 @@ export class SectionLayout {
     static empty(): SectionLayout {
         return new SectionLayout(Stack.default_());
     }
-    
+
 
     static fromJson(json: any): SectionLayout {
         const key = Object.keys(json)[0];
@@ -404,15 +404,19 @@ export class Stack {
     alignment: Alignment;
     width: Width;
 
-    constructor(elements: SectionLayout[], margin: Margin, alignment: Alignment, width: Width) {
+    constructor(elements: SectionLayout[], margin?: Margin, alignment?: Alignment, width?: Width) {
         this.tag = "Stack";
         this.elements = elements;
-        this.margin = margin;
-        this.alignment = alignment;
-        this.width = width;
+        this.margin = margin ?? Margin.default_();
+        this.alignment = alignment ?? Alignment.default_();
+        this.width = width ?? Width.default_();
     }
 
-    copy() : Stack {
+    static stack(elements: SectionLayout[], margin?: Margin, alignment?: Alignment, width?: Width): SectionLayout {
+        return new SectionLayout(new Stack(elements, margin, alignment, width));
+    }
+
+    copy(): Stack {
         return new Stack(
             this.elements.map((e) => e.copy()),
             this.margin.copy(),
@@ -422,7 +426,7 @@ export class Stack {
     }
 
     static default_(): Stack {
-        return new Stack([], Margin.default_(), Alignment.default_(), Width.default_());
+        return new Stack([]);
     }
 
     instantiate(section: & Map<string, ItemContent>): Stack {
@@ -468,13 +472,17 @@ export class Row {
     width: Width;
     is_frozen: boolean;
 
-    constructor(elements: SectionLayout[], is_frozen: boolean, margin: Margin, alignment: Alignment, width: Width) {
+    constructor(elements: SectionLayout[], is_frozen?: boolean, margin?: Margin, alignment?: Alignment, width?: Width) {
         this.tag = "Row";
         this.elements = elements;
-        this.is_frozen = is_frozen;
-        this.margin = margin;
-        this.alignment = alignment;
-        this.width = width;
+        this.is_frozen = is_frozen ?? false;
+        this.margin = margin ?? Margin.default_();
+        this.alignment = alignment ?? Alignment.default_();
+        this.width = width ?? Width.default_();
+    }
+
+    static row(elements: SectionLayout[], is_frozen?: boolean, margin?: Margin, alignment?: Alignment, width?: Width) {
+        return new SectionLayout(new Row(elements, is_frozen, margin, alignment, width));
     }
 
     copy() {
@@ -488,7 +496,7 @@ export class Row {
     }
 
     static default_(): Row {
-        return new Row([], false, Margin.default_(), Alignment.default_(), Width.default_());
+        return new Row([]);
     }
 
     instantiate(section: & Map<string, ItemContent>): Row {
@@ -583,6 +591,12 @@ export class Elem {
         this.width = width;
     }
 
+    static elem(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width) {
+        return new SectionLayout(
+            new Elem(item, url, is_ref, is_fill, text_width, font, margin, alignment, width)
+        );
+    }
+
     copy() {
         return new Elem(
             this.item,
@@ -603,6 +617,14 @@ export class Elem {
 
     with_item(item: string): Elem {
         return new Elem(item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+    }
+
+    as_ref() : Elem {
+        return new Elem(this.item, this.url, true, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+    }
+
+    with_font(font: Font) {
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, font, this.margin, this.alignment, this.width);
     }
 
     with_url(url: string): Elem {

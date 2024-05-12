@@ -95,7 +95,17 @@ class LocalStorage {
         localStorage.setItem("resumes", JSON.stringify(resumes));
     }
     save_data_schema(data_schema) {
-        throw new Error("Method not implemented.");
+        const schemasDirectMapped = JSON.parse(localStorage.getItem("data_schemas") || "[]");
+        const schemas = schemasDirectMapped.map((schema) => DataSchema_1.DataSchema.fromJson(schema));
+        const schema = schemas.find((schema) => schema.schema_name === data_schema.schema_name);
+        if (!schema) {
+            schemas.push(data_schema);
+        }
+        else {
+            schema.header_schema = data_schema.header_schema;
+            schema.item_schema = data_schema.item_schema;
+        }
+        localStorage.setItem("data_schemas", JSON.stringify(schemas.map((schema) => schema.toJson())));
     }
     save_layout_schema(layout_schema) {
         const schemasDirectMapped = JSON.parse(localStorage.getItem("section_layouts") || "[]");

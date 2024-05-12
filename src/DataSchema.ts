@@ -38,4 +38,12 @@ export class DataSchema {
             json.item_schema as Field[],
         );
     }
+
+    toJson() {
+        return {
+            schema_name: this.schema_name,
+            header_schema: this.header_schema,
+            item_schema: this.item_schema,
+        };
+    }
 }

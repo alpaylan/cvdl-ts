@@ -15,7 +15,7 @@ export declare class LocalStorage {
     load_layout_schema(schema_name: string): LayoutSchema;
     load_resume_layout(schema_name: string): ResumeLayout;
     save_resume(resume_name: string, resume_data: Resume): void;
-    save_data_schema(data_schema: DataSchema): Promise<void>;
+    save_data_schema(data_schema: DataSchema): void;
     save_layout_schema(layout_schema: LayoutSchema): void;
     save_resume_layout(resume_layout: ResumeLayout): void;
     load_font(font: Font): Promise<Buffer>;

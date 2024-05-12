@@ -24,4 +24,9 @@ export declare class DataSchema {
     item_schema: Field[];
     constructor(schema_name: string, header_schema: Field[], item_schema: Field[]);
     static fromJson(json: unknown): DataSchema;
+    toJson(): {
+        schema_name: string;
+        header_schema: Field[];
+        item_schema: Field[];
+    };
 }

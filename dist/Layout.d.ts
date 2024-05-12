@@ -42,7 +42,8 @@ export declare class Stack {
     margin: Margin;
     alignment: Alignment;
     width: Width;
-    constructor(elements: SectionLayout[], margin: Margin, alignment: Alignment, width: Width);
+    constructor(elements: SectionLayout[], margin?: Margin, alignment?: Alignment, width?: Width);
+    static stack(elements: SectionLayout[], margin?: Margin, alignment?: Alignment, width?: Width): SectionLayout;
     copy(): Stack;
     static default_(): Stack;
     instantiate(section: Map<string, ItemContent>): Stack;
@@ -60,7 +61,8 @@ export declare class Row {
     alignment: Alignment;
     width: Width;
     is_frozen: boolean;
-    constructor(elements: SectionLayout[], is_frozen: boolean, margin: Margin, alignment: Alignment, width: Width);
+    constructor(elements: SectionLayout[], is_frozen?: boolean, margin?: Margin, alignment?: Alignment, width?: Width);
+    static row(elements: SectionLayout[], is_frozen?: boolean, margin?: Margin, alignment?: Alignment, width?: Width): SectionLayout;
     copy(): Row;
     static default_(): Row;
     instantiate(section: Map<string, ItemContent>): Row;
@@ -85,9 +87,12 @@ export declare class Elem {
     alignment: Alignment;
     width: Width;
     constructor(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width);
+    static elem(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width): SectionLayout;
     copy(): Elem;
     static default_(): Elem;
     with_item(item: string): Elem;
+    as_ref(): Elem;
+    with_font(font: Font): Elem;
     with_url(url: string): Elem;
     with_margin(margin: Margin): Elem;
     with_alignment(alignment: Alignment): Elem;
