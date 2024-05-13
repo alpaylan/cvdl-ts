@@ -10,7 +10,7 @@ export class LocalStorage {
         if (!localStorage.getItem("resumes")) {
             fetch("https://d2bnplhbawocbk.cloudfront.net/data/resumes/resume5.json").then((response) => {
                 response.json().then((resume) => {
-                    localStorage.setItem("resumes", JSON.stringify([{ name: "resume5", data: resume }]));
+                    localStorage.setItem("resumes", JSON.stringify([{ name: "Default", data: resume }]));
                 });
             });
         }
