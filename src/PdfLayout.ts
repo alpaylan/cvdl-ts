@@ -6,6 +6,7 @@ import { DataSchema } from "./DataSchema";
 import { LayoutSchema } from "./LayoutSchema";
 import { ResumeLayout } from "./ResumeLayout";
 import { LocalStorage } from "./LocalStorage";
+import { ColorMap } from "./Layout";
 
 export type RenderResult = {
     blob: Blob,
@@ -103,12 +104,17 @@ export const render = async (
                 console.log(
                     `(${box_.top_left.x}, ${box_.top_left.y})(${box_.bottom_right.x}, ${box_.bottom_right.y}): ${element.item}`
                 );
-                console.log(element.font.full_name());
+                if (element.background_color !== "Transparent") {
+                    doc.rect(box_.top_left.x, box_.top_left.y, box_.width(), box_.height()).fillAndStroke(ColorMap[element.background_color], ColorMap[element.background_color]);   
+                }
+                // Make this more generic
+                doc.fillColor("black");
 
                 doc.
                     font(element.font.full_name()).
                     fontSize(element.font.size).
                     text(element.item, box_.top_left.x, box_.top_left.y, { lineBreak: false });
+                
                 if (debug) {
                     // doc.rect(box_.top_left.x, box_.top_left.y, box_.width(), box_.height()).stroke();
                 }

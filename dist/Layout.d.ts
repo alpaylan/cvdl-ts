@@ -75,6 +75,16 @@ export declare class Row {
     scale_width(w: number): Row;
     break_lines(font_dict: FontDict): Row[];
 }
+export type Color = "Transparent" | "Light Yellow" | "Light Brown" | "Light Green" | "Light Beige" | "Light Blue" | "Blue";
+export declare const ColorMap: {
+    Transparent: string;
+    "Light Yellow": string;
+    "Light Brown": string;
+    "Light Green": string;
+    "Light Beige": string;
+    "Light Blue": string;
+    Blue: string;
+};
 export declare class Elem {
     tag: "Elem";
     item: string;
@@ -86,8 +96,9 @@ export declare class Elem {
     margin: Margin;
     alignment: Alignment;
     width: Width;
-    constructor(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width);
-    static elem(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width): SectionLayout;
+    background_color: Color;
+    constructor(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width, background_color: Color);
+    static elem(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width, background_color: Color): SectionLayout;
     copy(): Elem;
     static default_(): Elem;
     with_item(item: string): Elem;

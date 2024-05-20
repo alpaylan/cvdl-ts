@@ -68,6 +68,7 @@ export class SectionLayout {
                 inner.text_width = Width.fromJson(json[key].text_width);
                 inner.font = Font.fromJson(json[key].font);
                 inner.url = json[key].url;
+                inner.background_color = json[key].background_color ?? "Transparent";
                 return new SectionLayout(inner);
             }
 
@@ -91,6 +92,7 @@ export class SectionLayout {
             }
             case "Elem": {
                 const elem = this.inner as Elem;
+                console.error(elem.background_color);
                 return {
                     [this.tag_()]: {
                         item: elem.item,
@@ -100,6 +102,7 @@ export class SectionLayout {
                         text_width: Width.toJson(elem.text_width),
                         font: elem.font.toJson(),
                         url: elem.url,
+                        background_color: elem.background_color,
                     },
                 };
             }
@@ -566,6 +569,26 @@ export class Row {
     }
 }
 
+
+export type Color = 
+    "Transparent"
+    | "Light Yellow" // "#FFC96F" 
+    | "Light Brown" // "#ECB176" 
+    | "Light Green" // "#F6FAB9" 
+    | "Light Beige" // "#F6EEC9" 
+    | "Light Blue" // "#EEF7FF" 
+    | "Blue" // "#4793AF" 
+
+export const ColorMap = {
+    "Transparent": "Transparent",
+    "Light Yellow": "#FFC96F",
+    "Light Brown": "#ECB176",
+    "Light Green": "#F6FAB9",
+    "Light Beige": "#F6EEC9",
+    "Light Blue": "#EEF7FF",
+    "Blue": "#4793AF",
+}
+
 export class Elem {
     tag: "Elem";
     item: string;
@@ -577,8 +600,9 @@ export class Elem {
     margin: Margin;
     alignment: Alignment;
     width: Width;
+    background_color: Color;
 
-    constructor(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width) {
+    constructor(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width, background_color: Color) {
         this.tag = "Elem";
         this.item = item;
         this.url = url;
@@ -589,15 +613,17 @@ export class Elem {
         this.margin = margin;
         this.alignment = alignment;
         this.width = width;
+        this.background_color = background_color;
     }
 
-    static elem(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width) {
+    static elem(item: string, url: string | null, is_ref: boolean, is_fill: boolean, text_width: Width, font: Font, margin: Margin, alignment: Alignment, width: Width, background_color: Color) {
         return new SectionLayout(
-            new Elem(item, url, is_ref, is_fill, text_width, font, margin, alignment, width)
+            new Elem(item, url, is_ref, is_fill, text_width, font, margin, alignment, width, background_color)
         );
     }
 
     copy() {
+        console.error(this.background_color);
         return new Elem(
             this.item,
             this.url,
@@ -607,48 +633,49 @@ export class Elem {
             this.font,
             this.margin.copy(),
             this.alignment,
-            Width.copy(this.width)
+            Width.copy(this.width),
+            this.background_color,
         )
     }
 
     static default_(): Elem {
-        return new Elem("", null, false, false, Width.default_(), Font.default_(), Margin.default_(), Alignment.default_(), Width.default_());
+        return new Elem("", null, false, false, Width.default_(), Font.default_(), Margin.default_(), Alignment.default_(), Width.default_(), "Transparent");
     }
 
     with_item(item: string): Elem {
-        return new Elem(item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+        return new Elem(item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width, this.background_color);
     }
 
-    as_ref() : Elem {
-        return new Elem(this.item, this.url, true, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+    as_ref(): Elem {
+        return new Elem(this.item, this.url, true, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width, this.background_color);
     }
 
     with_font(font: Font) {
-        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, font, this.margin, this.alignment, this.width);
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, font, this.margin, this.alignment, this.width, this.background_color);
     }
 
     with_url(url: string): Elem {
-        return new Elem(this.item, url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+        return new Elem(this.item, url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, this.width, this.background_color);
     }
 
     with_margin(margin: Margin): Elem {
-        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, margin, this.alignment, this.width);
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, margin, this.alignment, this.width, this.background_color);
     }
 
     with_alignment(alignment: Alignment): Elem {
-        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, alignment, this.width);
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, alignment, this.width, this.background_color);
     }
 
     with_width(width: Width): Elem {
-        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, width);
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, this.text_width, this.font, this.margin, this.alignment, width, this.background_color);
     }
 
     with_text_width(text_width: Width): Elem {
-        return new Elem(this.item, this.url, this.is_ref, this.is_fill, text_width, this.font, this.margin, this.alignment, this.width);
+        return new Elem(this.item, this.url, this.is_ref, this.is_fill, text_width, this.font, this.margin, this.alignment, this.width, this.background_color);
     }
 
     with_is_fill(is_fill: boolean): Elem {
-        return new Elem(this.item, this.url, this.is_ref, is_fill, this.text_width, this.font, this.margin, this.alignment, this.width);
+        return new Elem(this.item, this.url, this.is_ref, is_fill, this.text_width, this.font, this.margin, this.alignment, this.width, this.background_color);
     }
 
     scale_width(w: number): Elem {
@@ -673,7 +700,7 @@ export class Elem {
             words.forEach(word => {
                 const word_width = this.font.get_width(word, font_dict);
                 row.elements.push(
-                    new SectionLayout(new Elem(word, null, false, false, Width.absolute(word_width), this.font, Margin.default_(), Alignment.default_(), Width.absolute(word_width))),
+                    new SectionLayout(new Elem(word, null, false, false, Width.absolute(word_width), this.font, Margin.default_(), Alignment.default_(), Width.absolute(word_width), this.background_color)),
                 );
             });
             rowLines.push(row);

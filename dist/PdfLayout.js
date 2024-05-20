@@ -7,6 +7,7 @@ exports.render = void 0;
 const blob_stream_1 = __importDefault(require("blob-stream"));
 const AnyLayout_1 = require("./AnyLayout");
 const pdfkit_1 = __importDefault(require("pdfkit"));
+const Layout_1 = require("./Layout");
 const render = async ({ resume_name, resume, data_schemas, layout_schemas, resume_layout, storage, fontDict, debug = false }) => {
     let start_time = Date.now();
     if (!resume && !resume_name) {
@@ -67,7 +68,11 @@ const render = async ({ resume_name, resume, data_schemas, layout_schemas, resum
             }
             for (const [box_, element] of elements) {
                 console.log(`(${box_.top_left.x}, ${box_.top_left.y})(${box_.bottom_right.x}, ${box_.bottom_right.y}): ${element.item}`);
-                console.log(element.font.full_name());
+                if (element.background_color !== "Transparent") {
+                    doc.rect(box_.top_left.x, box_.top_left.y, box_.width(), box_.height()).fillAndStroke(Layout_1.ColorMap[element.background_color], Layout_1.ColorMap[element.background_color]);
+                }
+                // Make this more generic
+                doc.fillColor("black");
                 doc.
                     font(element.font.full_name()).
                     fontSize(element.font.size).
